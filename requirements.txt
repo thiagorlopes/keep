@@ -1,2 +1,8 @@
 Flask
 pytest
+pandas
+pyarrow
+requests
+fastparquet
+dbt-duckdb
+jupyter

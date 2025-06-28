@@ -1,0 +1,15 @@
+# This is the name of your project. It's used to namespace your models, etc.
+name: 'customer_transactions'
+version: '1.0.0'
+config-version: 2
+
+# The profile dbt should use (defined in profiles.yml in this folder)
+profile: 'customer_transactions_profile'
+
+# Paths
+model-paths: ["models"]
+
+# Default model config
+models:
+  customer_transactions:
+    +materialized: table

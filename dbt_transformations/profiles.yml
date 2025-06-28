@@ -1,0 +1,13 @@
+# dbt_transformations/profiles.yml
+
+customer_transactions_profile:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: ../data_lake/prod.duckdb  # Path to your DuckDB database file
+      schema: main
+      # Optional: add extensions here
+      # extensions:
+      #   - httpfs
+      #   - a_n_other
