@@ -104,13 +104,16 @@ def get_statements(customerId):
     if not data or 'LoginId' not in data:
         return jsonify({'error': 'LoginId is required'}), 400
 
-    account_id = data.get('AccountId')
+    account_number = data.get('AccountNumber')
+    if not account_number:
+        return jsonify({'error': 'AccountNumber is required'}), 400
+
+    # Look up the internal account ID from the account number
+    account_id = data_service.get_account_id_by_number(account_number)
     if not account_id:
-        return jsonify({'error': 'AccountId is required'}), 400
+        return jsonify({'error': f"Account with AccountNumber '{account_number}' not found."}), 404
 
-    if not data_service.is_valid_account(account_id):
-        return jsonify({'error': 'Invalid AccountId'}), 404
-
+    # The rest of the logic uses the internal account_id
     transactions = data_service.load_transactions(account_id)
 
     return jsonify({

@@ -1,16 +1,17 @@
 import os
+import json
 import requests
 import pandas as pd
 from pathlib import Path
 
-def fetch_data_from_api(customer_id, login_id, account_id, api_url_template="http://127.0.0.1:5000/v3/{customer_id}/BankingServices/GetStatements"):
+def fetch_data_from_api(customer_id, login_id, account_number, api_url_template="http://127.0.0.1:5000/v3/{customer_id}/BankingServices/GetStatements"):
     """
     Fetches data from the GetStatements API for a given customer and account.
 
     Args:
         customer_id (str): The customer's UUID.
         login_id (str): The login ID obtained from the authorization step.
-        account_id (str): The account ID to fetch statements for.
+        account_number (str): The account number to fetch statements for.
         api_url_template (str): The URL template for the API endpoint.
 
     Returns:
@@ -19,7 +20,7 @@ def fetch_data_from_api(customer_id, login_id, account_id, api_url_template="htt
     api_url = api_url_template.format(customer_id=customer_id)
     payload = {
         "LoginId": login_id,
-        "AccountId": account_id
+        "AccountNumber": account_number
     }
     headers = {
         "Content-Type": "application/json"
@@ -126,17 +127,32 @@ def process_and_save_statements(api_response, bronze_path):
 def main():
     """Main function to run the bronze ingestion pipeline."""
     BRONZE_PATH = 'data_lake/bronze'
+    CONFIG_PATH = 'config.json'
 
     Path(BRONZE_PATH).mkdir(parents=True, exist_ok=True)
+
+    # Load account information from config.json
+    try:
+        with open(CONFIG_PATH, 'r') as f:
+            config = json.load(f)
+        accounts_to_process = config.get("accounts", [])
+    except (FileNotFoundError, json.JSONDecodeError) as e:
+        print(f"Error loading or parsing {CONFIG_PATH}: {e}")
+        return
 
     # In a real app, these would come from a config or an orchestration tool
     customer_id = "123e4567-e89b-12d3-a456-426614174000"
     login_id = "abc-123"
-    accounts_to_process = ["001_statement_a", "002_statement_b"]
 
-    for account_id in accounts_to_process:
-        print(f"Fetching data for account: {account_id}")
-        api_data = fetch_data_from_api(customer_id, login_id, account_id)
+    for account in accounts_to_process:
+        account_id = account.get("Id")
+        account_number = account.get("AccountNumber")
+        if not all([account_id, account_number]):
+            print(f"Skipping account due to missing 'Id' or 'AccountNumber': {account}")
+            continue
+
+        print(f"Fetching data for account number: {account_number} (Id: {account_id})")
+        api_data = fetch_data_from_api(customer_id, login_id, account_number)
 
         if api_data:
             process_and_save_statements(api_data, BRONZE_PATH)

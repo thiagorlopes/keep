@@ -11,7 +11,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the application code and config file into the container
 COPY ./api_mock ./api_mock
-COPY ./data ./data
 COPY config.json .
 
 # Expose the port the app runs on
