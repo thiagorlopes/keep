@@ -6,3 +6,4 @@ requests
 fastparquet
 dbt-duckdb
 jupyter
+deltalake
