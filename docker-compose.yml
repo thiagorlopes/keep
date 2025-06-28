@@ -1,14 +1,13 @@
 version: '3.8'
 services:
-  web:
+  api:
     build: .
     ports:
       - "5000:5000"
     volumes:
       # Mount the local 'app' directory into the container's 'app' directory
-      - ./app:/app/app
-      # You can also mount the data directory if you want to make changes to CSVs
-      - ./data:/app/data
+      - ./api_mock:/app/api_mock
+      - ./run.py:/app/run.py
     environment:
       # This tells Flask to run in development mode
       - FLASK_ENV=development

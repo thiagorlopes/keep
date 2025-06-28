@@ -10,13 +10,13 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the application code and config file into the container
-COPY ./app ./app
+COPY ./api_mock ./api_mock
 COPY ./data ./data
 COPY config.json .
-COPY run.py .
 
 # Expose the port the app runs on
 EXPOSE 5000
 
 # Command to run the application
-CMD ["python", "run.py"]
+ENV FLASK_APP=run.py
+CMD ["flask", "run", "--host=0.0.0.0"]

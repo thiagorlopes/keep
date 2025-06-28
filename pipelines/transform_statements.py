@@ -1,6 +1,12 @@
 import pandas as pd
 from pathlib import Path
 
+# ---------------------------------------------------------------------------
+# New import to interact with the scoring_status ledger so that each
+# *(email, request_id)* pair is only processed once across nightly runs.
+# ---------------------------------------------------------------------------
+from .scoring_status import ScoringStatusLedger
+
 def clean_bronze_data(bronze_path, silver_path):
     """
     Reads data from the bronze layer, cleans it, and saves it to the silver layer.
@@ -39,6 +45,24 @@ def clean_bronze_data(bronze_path, silver_path):
 
                     # Save the cleaned data to the silver layer
                     df.to_parquet(silver_file, engine='fastparquet')
+
+                    # ------------------------------------------------------------------
+                    # Update the idempotent ledger with any **new** application found in
+                    # this account's transactions.  We assume *email* and *request_id*
+                    # are present in the cleaned schema and uniquely identify an
+                    # application, as requested.
+                    # ------------------------------------------------------------------
+                    if {'email', 'request_id'}.issubset(df.columns):
+                        ledger = ScoringStatusLedger()
+                        # We only need distinct combinations to avoid repeated disk I/O.
+                        distinct_apps = (
+                            df[['email', 'request_id']]
+                            .dropna()
+                            .drop_duplicates()
+                            .to_dict('records')
+                        )
+                        for record in distinct_apps:
+                            ledger.record_pending(record['email'], record['request_id'])
 
                     print(f"Cleaned data for account {account_dir.name} and saved to {silver_file}")
 

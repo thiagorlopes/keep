@@ -5,7 +5,10 @@ import zipfile
 import base64
 from uuid import uuid4
 from flask import Blueprint, jsonify, request, render_template, flash, send_from_directory, redirect, url_for, Response, current_app
-from app.services import data_service
+from api_mock.services import data_service
+import logging
+
+logging.basicConfig(level=logging.INFO)
 
 api_bp = Blueprint('api', __name__, static_folder='static')
 
