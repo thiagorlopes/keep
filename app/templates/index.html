@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flinks Mock Interface</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header class="header">
+        <img src="https://cdn.prod.website-files.com/6733567c88ece7f1d9007402/67d1b5a9f378a449792ce6b0_Flinks%20logo%20-%20bottom%20align.svg" alt="Flinks Logo" class="logo">
+        <!-- Mock navigation for visual fidelity -->
+        <div></div>
+    </header>
+
+    <main class="main-container">
+        <h1 class="title">Your shortcut to better financial products</h1>
+        <p class="subtitle">Onboard more customers, reduce fraud, and improve back office efficiency with mock data connectivity.</p>
+
+        <div class="form-container">
+            <form action="/download" method="post" style="width: 100%;">
+                <input type="email" id="email" name="email" placeholder="e.g., joelschaubel@gmail.com" required>
+                <button type="submit" class="button-primary" style="margin-top: 1rem;">
+                    Download Statements (.zip)
+                    <span style="font-size: 1.2em;">&rarr;</span>
+                </button>
+            </form>
+
+            <div id="status-container" style="width: 100%;"></div>
+        </div>
+    </main>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="{{ url_for('static', filename='main.js') }}"></script>
+</body>
+</html>
