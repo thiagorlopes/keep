@@ -44,10 +44,54 @@ The current MVP is fully functional for local development and testing. The follo
 4.  **Upgrade the Data Warehouse**: Transition the analytics from DuckDB to a production data warehouse like **Snowflake**, **BigQuery**, or **Redshift** to handle large-scale data.
 5.  **Implement the Decisioning Logic**: Build out the Taktile integration to connect the feature data to the live decisioning engine.
 
-## How to Run the Project
+## Getting Started
 
-The entire project is containerized using Docker and can be easily run with a single command:
+### Prerequisites
+- Docker & Docker Compose
+- Python 3.10+ (for local script execution)
+
+### Running the End-to-End Demo
+
+This workflow demonstrates the entire system, from starting the API to running the data pipelines and the analytics models.
+
+**Step 1: Start the Services**
+
+First, start the mock API service using Docker Compose. This will also build the necessary container image.
 
 ```bash
 docker-compose up --build
-``` 
+```
+Leave this running in a terminal. The API will now be available at `http://127.0.0.1:5000`.
+
+**Step 2: Run the Data Pipelines**
+
+In a **new terminal**, you can run the data pipelines. If you haven't already, install the Python dependencies:
+```bash
+pip install -r requirements.txt
+```
+
+Now, run the pipelines sequentially.
+
+1.  **Run the ingestion pipeline** to fetch data from the API and populate the bronze layer:
+    ```bash
+    python -m pipelines.ingest_statements
+    ```
+2.  **Run the transformation pipeline** to clean the data and update the silver and ledger tables:
+    ```bash
+    python -m pipelines.transform_statements
+    ```
+
+**Step 3: Run the Analytics Models**
+
+With the data processed, you can now run the dbt models to generate the final analytics tables.
+
+1.  Navigate to the analytics directory:
+    ```bash
+    cd analytics
+    ```
+2.  Run the dbt models:
+    ```bash
+    dbt run
+    ```
+
+After completing these steps, you will have successfully executed the entire data flow from end to end. You can explore the final tables in the `pipelines/data_lake/analytics` directory. 
