@@ -23,9 +23,10 @@ The project follows a standard Flask application structure:
 │   ├── services/         # Business logic and data access
 │   ├── static/           # Static files (CSS, JS)
 │   ├── templates/        # HTML templates
-│   ├── data/             # Raw CSV statement files
 │   └── __init__.py       # Application factory
-├── pipelines/            # Data ingestion and cleaning pipelines
+├── pipelines/            # Data pipelines and local data lake
+│   ├── data_lake/        # The data lake (bronze, silver, etc.)
+│   └── ...
 ├── analytics/            # dbt and DuckDB analytics project
 ├── tests/                # Pytest test suite
 ├── .dockerignore         # Files to ignore in the Docker build

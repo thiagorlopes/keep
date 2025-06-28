@@ -15,11 +15,12 @@ The system is composed of four main components, each designed to be modular and 
 ### 2. Data Pipelines (`pipelines`)
 
 - **Purpose**: A set of robust data pipelines responsible for ingesting, cleaning, and transforming the raw data into a usable format.
-- **Technology**: The pipelines are built using Python and Pandas, processing the data in stages and storing the output as Parquet files in a local data lake.
-- **Architecture**:
-    - **Bronze Layer**: Raw, unprocessed data is ingested from the API and landed in the `data_lake/bronze` directory.
-    - **Silver Layer**: The raw data is then cleaned, validated, and transformed into a standardized schema, with the results stored in the `data_lake/silver` directory.
-- **Key Feature: Idempotency**: A critical feature of these pipelines is their idempotency, which is achieved through a `scoring_status.py` ledger. This stateful component tracks the processing status (`PENDING`, `SENT`, `SCORED`, `ERROR`) of each application. By checking the ledger before processing, the system guarantees that no application is ever processed more than once, even if the pipeline is run multiple times. This prevents data duplication and ensures the integrity of the analytics downstream—a crucial requirement for any financial system.
+- **Technology**: The pipelines are built using Python with `deltalake` and `pandas`, processing data in stages and storing the output in a local, transactional data lake.
+- **Architecture**: The data lake is co-located with the pipelines at `pipelines/data_lake/` and follows a standard multi-hop architecture:
+    - **Bronze Layer**: Raw, unprocessed data is landed here from the source API.
+    - **Silver Layer**: Data is cleaned, standardized, and enriched.
+    - **Application Status Ledger**: A dedicated table (`application_status_ledger`) tracks the state of each application through the workflow.
+- **Key Feature: Idempotency & ACID Transactions**: The entire data lake is built on **Delta Lake**. Instead of manual state management, the pipelines leverage atomic `MERGE` operations. This provides ACID guarantees and ensures that every pipeline run is idempotent, preventing data duplication and corruption. This is a modern, industry-standard approach to building reliable data platforms.
 - **Production Strategy**: These pipelines can be easily migrated to a production environment and deployed on a cloud-based workflow orchestrator like Apache Airflow or Prefect. The data lake itself would be moved to a cloud storage solution like Amazon S3 or Google Cloud Storage.
 
 ### 3. Analytics (`analytics`)
