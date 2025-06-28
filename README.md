@@ -1,6 +1,6 @@
 # Mock Flinks API Server
 
-This project provides a mock implementation of a subset of the Flinks API, designed for local development and testing. It includes a web interface for easy interaction and is fully containerized with Docker.
+This project provides a mock implementation of a subset of the [Flinks API](https://docs.flinks.com/docs/welcome?_gl=1*je0k2v*_gcl_au*NDY3Mzk0Mzc5LjE3NTEwNDk5NzU.), designed for local development and testing. It includes a web interface for easy interaction and is fully containerized with Docker.
 
 ## Features
 
