@@ -5,8 +5,10 @@ customer_transactions_profile:
   outputs:
     dev:
       type: duckdb
-      path: ../data_lake/prod.duckdb  # Path to your DuckDB database file
+      path: '{{ env_var("DUCKDB_PATH", "../pipelines/data_lake/prod.duckdb") }}'
       schema: main
+      extensions:
+        - delta
       # Optional: add extensions here
       # extensions:
       #   - httpfs

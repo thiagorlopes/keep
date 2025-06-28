@@ -5,7 +5,8 @@
 WITH transactions_with_latest_date AS (
     SELECT
         *,
-        MAX(date) OVER(PARTITION BY login_id) as most_recent_statement_date
+        -- Cast the date column to TIMESTAMP to ensure correct date arithmetic
+        MAX(CAST(date AS TIMESTAMP)) OVER(PARTITION BY login_id) as most_recent_statement_date
     FROM {{ ref('statements') }}
 )
 -- Final selection and creation of new date columns
