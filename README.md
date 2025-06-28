@@ -1,153 +1,42 @@
-# Mock Flinks API Server
+# End-to-End Credit Scoring System
 
-This project provides a mock implementation of a subset of the [Flinks API](https://docs.flinks.com/docs/welcome?_gl=1*je0k2v*_gcl_au*NDY3Mzk0Mzc5LjE3NTEwNDk5NzU.), designed for local development and testing. It includes a web interface for easy interaction and is fully containerized with Docker.
+This project implements a comprehensive, end-to-end credit scoring system, designed with production-readiness and scalability in mind. It ingests raw financial data, processes it through a series of data pipelines, and prepares it for credit decisioning.
 
-## Features
+## High-Level Architecture
 
-- **Realistic API Endpoints**: Simulates key Flinks endpoints like `/Authorize`, `/GetAccountsDetail`, and `/GetStatements`.
-- **JSON-based API**: The primary data endpoint returns a structured JSON payload with base64-encoded statement data, mimicking modern API design.
-- **Interactive Web UI**: A clean, user-friendly frontend to query the API by email and download a `.zip` archive of all associated statements.
-- **Dockerized Environment**: Includes a `Dockerfile` for easy, one-command setup and execution, eliminating the need for local Python environment management.
-- **Clean Architecture**: The application is structured with a clear separation of concerns (API routes, services, data).
-- **Comprehensive Test Suite**: Includes unit and integration tests built with `pytest`.
-- **High-Fidelity Data**: Uses real data from the provided CSV files to ensure realistic mock responses.
+The system is composed of four main components, each designed to be modular and independently scalable.
 
-## Project Structure
+### 1. Mock API (`api_mock`)
 
-The project follows a standard Flask application structure:
+- **Purpose**: Mimics the behavior of a third-party financial data aggregator (like Flinks), providing realistic statement data for development and testing.
+- **Technology**: A Flask-based API that serves mock bank statement data from CSV files.
+- **Production Strategy**: This component is designed to be easily swappable. In a production environment, the API client would be reconfigured to point to the real Flinks API endpoint with minimal changes to the downstream data pipelines.
 
-```
-.
-├── app/                  # Main Flask application
-│   ├── api/              # API blueprint and routes
-│   ├── services/         # Business logic and data access
-│   ├── static/           # Static files (CSS, JS)
-│   ├── templates/        # HTML templates
-│   └── __init__.py       # Application factory
-├── data/                 # Raw CSV statement files
-├── ingestion_pipeline/   # (Placeholder) For data ingestion scripts
-├── tests/                # Pytest test suite
-├── .dockerignore         # Files to ignore in the Docker build
-├── Dockerfile            # Docker configuration
-├── requirements.txt      # Python dependencies
-└── run.py                # Application entry point
-```
+### 2. Data Pipelines (`pipelines`)
 
-## Setup and Installation
+- **Purpose**: A set of robust data pipelines responsible for ingesting, cleaning, and transforming the raw data into a usable format.
+- **Technology**: The pipelines are built using Python and Pandas, processing the data in stages and storing the output as Parquet files in a local data lake.
+- **Architecture**:
+    - **Bronze Layer**: Raw, unprocessed data is ingested from the API and landed in the `data_lake/bronze` directory.
+    - **Silver Layer**: The raw data is then cleaned, validated, and transformed into a standardized schema, with the results stored in the `data_lake/silver` directory.
+- **Key Feature: Idempotency**: A critical feature of these pipelines is their idempotency, which is achieved through a `scoring_status.py` ledger. This stateful component tracks the processing status (`PENDING`, `SENT`, `SCORED`, `ERROR`) of each transaction. By checking the ledger before processing, the system guarantees that no transaction is ever processed more than once, even if the pipeline is run multiple times. This prevents data duplication and ensures the integrity of the analytics downstream—a crucial requirement for any financial system.
+- **Production Strategy**: These pipelines can be easily migrated to a production environment and deployed on a cloud-based workflow orchestrator like Apache Airflow or Prefect. The data lake itself would be moved to a cloud storage solution like Amazon S3 or Google Cloud Storage.
 
-### Prerequisites
+### 3. Analytics (`analytics`)
 
-- Python 3.10+
-- Docker Desktop (or Docker Engine)
+- **Purpose**: This component is responsible for running analytics on the cleaned data to generate insights and features for the credit scoring model.
+- **Technology**: A dbt (Data Build Tool) project that uses DuckDB as its data warehouse. This allows for rapid, SQL-based development of data models and transformations on the local Parquet files.
+- **Production Strategy**: In a production setting, this dbt project would be reconfigured to connect to a cloud data warehouse like Snowflake, BigQuery, or Redshift, enabling it to handle much larger datasets and more complex analytical workloads.
 
-### 1. Docker Setup (Recommended)
+### 4. Taktile (Not Implemented)
 
-This is the easiest and recommended way to run the application.
+- **Purpose**: This future component will be responsible for the final credit decisioning.
+- **Implementation Plan**: It will take the features generated by the analytics layer and send them to a decisioning engine (like Taktile) to get a credit score and recommendation. The results will then be stored back in our data warehouse for analysis and monitoring.
 
-**A. Build the Docker image:**
+## How to Run the Project
+
+The entire project is containerized using Docker and can be easily run with a single command:
+
 ```bash
-docker build -t flinks-mock-api .
-```
-
-**B. Run the Docker container:**
-```bash
-docker run -d --rm -p 5000:5000 flinks-mock-api
-```
-The application will be available at `http://127.0.0.1:5000`.
-
-### 3. Development with Hot-Reloading (Docker Compose)
-
-For active development, using Docker Compose is the most efficient method. It automatically reloads the server inside the container whenever you save a file.
-
-**A. Start the service:**
-```bash
-docker compose up
-```
-
-**B. Stop the service:**
-When you are finished, press `Ctrl+C` in the terminal, or run:
-```bash
-docker compose down
-```
-
-### 2. Local Python Environment Setup
-
-If you prefer to run the application locally without Docker:
-
-**A. Create and activate a virtual environment:**
-```bash
-python3 -m venv venv
-source venv/bin/activate
-```
-
-**B. Install the dependencies:**
-```bash
-pip install -r requirements.txt
-```
-
-**C. Run the application:**
-```bash
-python run.py
-```
-The application will be available at [http://127.0.0.1:5000](http://127.0.0.1:5000).
-
-
-## Usage
-
-### Web Interface
-
-Navigate to `http://127.0.0.1:5000` in your web browser.
-
-- **Email**: `joelschaubel@gmail.com`
-
-Enter the email address into the input field. The application will make a request to the API and generate a `.zip` file containing all statements associated with that user.
-
-### API Endpoint for Data Retrieval
-
-While the UI is convenient, you can also interact directly with the JSON API endpoint. This is the endpoint that a real client application or an ingestion pipeline would use.
-
-**Endpoint**: `POST /download`
-
-This endpoint expects a form-data payload with an `email` key.
-
-**Example `curl` command:**
-```bash
-curl -X POST -F "email=joelschaubel@gmail.com" http://127.0.0.1:5000/download
-```
-
-**Example Successful JSON Response:**
-```json
-{
-  "Email": "joelschaubel@gmail.com",
-  "Statements": [
-    {
-      "AccountNumber": "010-30800-0095971396",
-      "AccountType": "Operation",
-      "Content_Base64": "VXNlcm5hbWUsRW1haWwsQWRkcmVzcy...",
-      "FileName": "statement_010-30800-0095971396.csv"
-    },
-    {
-      "AccountNumber": "010-30800-0095983938",
-      "AccountType": "Operation",
-      "Content_Base64": "VXNlcm5hbWUsRW1haWwsQWRkcmVzcy...",
-      "FileName": "statement_010-30800-0095983938.csv"
-    }
-  ]
-}
-```
-
-**Example Error JSON Response:**
-```json
-{
-  "error": "Email 'test@test.com' not found."
-}
-```
-
-## Running the Test Suite
-
-To run the tests, ensure you have set up a local Python environment and installed the dependencies.
-
-Run the full test suite with `pytest`:
-```bash
-python -m pytest -v
-```
+docker-compose up --build
+``` 
