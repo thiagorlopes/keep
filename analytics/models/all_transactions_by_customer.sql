@@ -25,14 +25,17 @@ SELECT
     account_name,
     account_number,
     account_type,
-    account_balance,
-    date,
+    
+    -- Safe casting to handle empty strings
+    CASE WHEN account_balance = '' THEN NULL ELSE CAST(account_balance AS DOUBLE) END AS account_balance,
+    CAST(date AS TIMESTAMP) AS date,
     description,
     category,
     subcategory,
-    withdrawals,
-    deposits,
-    balance,
+    CASE WHEN withdrawals = '' THEN NULL ELSE CAST(withdrawals AS DOUBLE) END AS withdrawals,
+    CASE WHEN deposits = '' THEN NULL ELSE CAST(deposits AS DOUBLE) END AS deposits,
+    CASE WHEN balance = '' THEN NULL ELSE CAST(balance AS DOUBLE) END AS balance,
+
     most_recent_statement_date,
     (most_recent_statement_date - INTERVAL '90' DAY)::DATE AS most_recent_statement_date_minus_90_days,
     (most_recent_statement_date - INTERVAL '180' DAY)::DATE AS most_recent_statement_date_minus_180_days
