@@ -3,6 +3,7 @@ import json
 import requests
 import pandas as pd
 from pathlib import Path
+from deltalake.writer import write_deltalake
 
 def fetch_data_from_api(customer_id, login_id, account_number, api_url_template="http://127.0.0.1:5000/v3/{customer_id}/BankingServices/GetStatements"):
     """
@@ -33,103 +34,12 @@ def fetch_data_from_api(customer_id, login_id, account_number, api_url_template=
         print(f"Error fetching data from API: {e}")
         return None
 
-def process_and_save_statements(api_response, bronze_path):
-    """
-    Processes the API response, extracts transactions, and saves them as Parquet files.
-
-    Args:
-        api_response (dict): The JSON response from the API.
-        bronze_path (str or Path): The path to the bronze layer directory.
-    """
-    if not api_response or 'Statements' not in api_response:
-        print("No statements found in the API response.")
-        return
-
-    statements = api_response.get('Statements', [])
-    for statement in statements:
-        account_id = statement.get('AccountId')
-        transactions = statement.get('Transactions', [])
-
-        if not all([account_id, transactions]):
-            print("Skipping statement due to missing account ID or transactions.")
-            continue
-
-        try:
-            # Load transactions into a pandas DataFrame
-            df = pd.DataFrame(transactions)
-
-            # --- Data Cleaning and Schema Definition ---
-            # Standardize column names (e.g., to snake_case)
-            df.columns = [col.replace(' ', '_').replace('/', '_').lower() for col in df.columns]
-
-            # Define a basic schema and data types
-            # Based on the new JSON structure
-            schema = {
-                'username': 'string',
-                'email': 'string',
-                'address': 'string',
-                'financial_institution': 'string',
-                'employer_name': 'string',
-                'login_id': 'string',
-                'request_id': 'string',
-                'request_date_time': 'datetime64[ns]',
-                'request_status': 'string',
-                'days_detected': 'string',
-                'tag': 'string',
-                'account_name': 'string',
-                'account_number': 'string',
-                'account_type': 'string',
-                'account_balance': 'float64',
-                'date': 'datetime64[ns]',
-                'description': 'string',
-                'category': 'string',
-                'subcategory': 'string',
-                'withdrawals': 'float64',
-                'deposits': 'float64',
-                'balance': 'float64',
-                'amount': 'float64',
-                'type': 'string'
-            }
-
-            # Ensure all columns exist, fill missing with None
-            for col in schema:
-                if col not in df.columns:
-                    df[col] = None
-
-            # Convert numeric columns, coercing errors
-            for col in ['withdrawals', 'deposits', 'balance', 'account_balance']:
-                if col in df.columns:
-                    df[col] = pd.to_numeric(df[col], errors='coerce')
-
-
-            # Apply the schema
-            df = df.astype({k: v for k, v in schema.items() if k in df.columns and 'datetime' not in v and k in df.columns})
-
-            # Handle datetimes separately
-            for col, type in schema.items():
-                if type == 'datetime64[ns]' and col in df.columns:
-                    df[col] = pd.to_datetime(df[col], errors='coerce')
-
-            # Create a directory for the account if it doesn't exist
-            output_dir = Path(bronze_path) / account_id
-            output_dir.mkdir(parents=True, exist_ok=True)
-
-            # Save as Parquet
-            output_file = output_dir / 'data.parquet'
-            df.to_parquet(output_file, engine='fastparquet', index=False)
-
-            print(f"Saved statement for account {account_id} to {output_file}")
-
-        except Exception as e:
-            print(f"An error occurred while processing account {account_id}: {e}")
-
-
 def main():
     """Main function to run the bronze ingestion pipeline."""
-    BRONZE_PATH = 'data_lake/bronze'
-    CONFIG_PATH = 'config.json'
-
-    Path(BRONZE_PATH).mkdir(parents=True, exist_ok=True)
+    # Define the data lake path relative to this script's location
+    PIPELINES_DIR = Path(__file__).parent
+    BRONZE_PATH = PIPELINES_DIR / 'data_lake/bronze'
+    CONFIG_PATH = PIPELINES_DIR.parent / 'config.json'
 
     # Load account information from config.json
     try:
@@ -140,9 +50,10 @@ def main():
         print(f"Error loading or parsing {CONFIG_PATH}: {e}")
         return
 
-    # In a real app, these would come from a config or an orchestration tool
     customer_id = "123e4567-e89b-12d3-a456-426614174000"
     login_id = "abc-123"
+
+    all_transactions = []
 
     for account in accounts_to_process:
         account_id = account.get("Id")
@@ -154,8 +65,29 @@ def main():
         print(f"Fetching data for account number: {account_number} (Id: {account_id})")
         api_data = fetch_data_from_api(customer_id, login_id, account_number)
 
-        if api_data:
-            process_and_save_statements(api_data, BRONZE_PATH)
+        if api_data and 'Statements' in api_data:
+            statements = api_data.get('Statements', [])
+            for statement in statements:
+                transactions = statement.get('Transactions', [])
+                if transactions:
+                    df = pd.DataFrame(transactions)
+                    # Add account_id to each transaction for tracking
+                    df['account_id'] = account_id
+                    all_transactions.append(df)
+
+    if all_transactions:
+        # Combine all transactions into a single DataFrame
+        final_df = pd.concat(all_transactions, ignore_index=True)
+
+        # Standardize column names
+        final_df.columns = [col.replace(' ', '_').replace('/', '_').lower() for col in final_df.columns]
+
+        # Write to a single bronze Delta table, appending new data
+        print(f"Writing {len(final_df)} transactions to bronze Delta table at {BRONZE_PATH}...")
+        write_deltalake(BRONZE_PATH, final_df, mode='append')
+        print("Bronze ingestion complete.")
+    else:
+        print("No transactions were fetched to ingest.")
 
 if __name__ == "__main__":
     main()

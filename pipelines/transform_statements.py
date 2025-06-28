@@ -1,80 +1,86 @@
 import pandas as pd
+from deltalake import DeltaTable, write_deltalake
 from pathlib import Path
 
-# ---------------------------------------------------------------------------
-# New import to interact with the scoring_status ledger so that each
-# *(email, request_id)* pair is only processed once across nightly runs.
-# ---------------------------------------------------------------------------
-from .scoring_status import ScoringStatusLedger
-
-def clean_bronze_data(bronze_path, silver_path):
-    """
-    Reads data from the bronze layer, cleans it, and saves it to the silver layer.
-
-    Args:
-        bronze_path (str or Path): The path to the bronze layer directory.
-        silver_path (str or Path): The path to the silver layer directory.
-    """
-    bronze_path = Path(bronze_path)
-    silver_path = Path(silver_path)
-
-    # Ensure the silver directory exists
-    silver_path.mkdir(parents=True, exist_ok=True)
-
-    # Iterate over each account's data in the bronze layer
-    for account_dir in bronze_path.iterdir():
-        if account_dir.is_dir():
-            bronze_file = account_dir / 'data.parquet'
-            if bronze_file.exists():
-                try:
-                    df = pd.read_parquet(bronze_file)
-
-                    # --- Data Cleaning ---
-                    for col in df.columns:
-                        # Check if the column has a numeric type
-                        if pd.api.types.is_numeric_dtype(df[col]):
-                            df[col] = df[col].fillna(0)
-                        # Check if the column has an object type (likely strings)
-                        elif pd.api.types.is_object_dtype(df[col]):
-                            df[col] = df[col].fillna('')
-
-                    # Define the output path in the silver layer
-                    silver_account_dir = silver_path / account_dir.name
-                    silver_account_dir.mkdir(parents=True, exist_ok=True)
-                    silver_file = silver_account_dir / 'data.parquet'
-
-                    # Save the cleaned data to the silver layer
-                    df.to_parquet(silver_file, engine='fastparquet')
-
-                    # ------------------------------------------------------------------
-                    # Update the idempotent ledger with any **new** application found in
-                    # this account's transactions.  We assume *email* and *request_id*
-                    # are present in the cleaned schema and uniquely identify an
-                    # application, as requested.
-                    # ------------------------------------------------------------------
-                    if {'email', 'request_id'}.issubset(df.columns):
-                        ledger = ScoringStatusLedger()
-                        # We only need distinct combinations to avoid repeated disk I/O.
-                        distinct_apps = (
-                            df[['email', 'request_id']]
-                            .dropna()
-                            .drop_duplicates()
-                            .to_dict('records')
-                        )
-                        for record in distinct_apps:
-                            ledger.record_pending(record['email'], record['request_id'])
-
-                    print(f"Cleaned data for account {account_dir.name} and saved to {silver_file}")
-
-                except Exception as e:
-                    print(f"Error processing file {bronze_file}: {e}")
-
 def main():
-    """Main function to run the silver data processing."""
-    BRONZE_PATH = 'data_lake/bronze'
-    SILVER_PATH = 'data_lake/silver'
+    """
+    Reads new data from the bronze layer, cleans it, and merges it into the
+    silver layer and the scoring_status ledger. This pipeline is fully
+    idempotent and scalable.
+    """
+    PIPELINES_DIR = Path(__file__).parent
+    BRONZE_PATH = PIPELINES_DIR / 'data_lake/bronze'
+    SILVER_PATH = PIPELINES_DIR / 'data_lake/silver'
+    STATUS_LEDGER_PATH = PIPELINES_DIR / 'data_lake/application_status_ledger'
 
-    clean_bronze_data(BRONZE_PATH, SILVER_PATH)
+    # Read the entire bronze table. In a production scenario with large data,
+    # this would be optimized with streaming reads or incremental processing.
+    try:
+        bronze_dt = DeltaTable(BRONZE_PATH)
+        df = bronze_dt.to_pandas()
+    except Exception as e:
+        print(f"Error reading bronze Delta table at {BRONZE_PATH}: {e}")
+        return
+
+    print(f"Read {len(df)} rows from the bronze layer.")
+
+    # --- Data Cleaning ---
+    for col in df.columns:
+        if pd.api.types.is_numeric_dtype(df[col]):
+            df[col] = df[col].fillna(0)
+        elif pd.api.types.is_object_dtype(df[col]):
+            df[col] = df[col].fillna('')
+
+    # Ensure key columns exist for the ledger merge
+    if 'email' not in df.columns or 'request_id' not in df.columns:
+        print("Error: 'email' or 'request_id' not found in bronze data.")
+        return
+
+    # --- Upsert into Silver Layer ---
+    print(f"Merging {len(df)} cleaned rows into the silver Delta table...")
+    try:
+        (
+            DeltaTable(SILVER_PATH)
+            .merge(
+                source=df,
+                # Define the merge condition to avoid duplicates
+                predicate="target.email = source.email AND target.request_id = source.request_id AND target.date = source.date AND target.description = source.description",
+                source_alias="source",
+                target_alias="target"
+            )
+            .when_not_matched_insert_all()
+            .execute()
+        )
+    except Exception:
+        print("Silver table not found, creating new one.")
+        write_deltalake(SILVER_PATH, df)
+
+    print("Silver layer merge complete.")
+
+    # --- Idempotently Update the Scoring Status Ledger ---
+    print("Updating scoring status ledger...")
+    status_df = df[['email', 'request_id']].drop_duplicates().copy()
+    status_df['status'] = 'PENDING'
+
+    try:
+        # If the table exists, merge. Otherwise, create it.
+        (
+            DeltaTable(STATUS_LEDGER_PATH)
+            .merge(
+                source=status_df,
+                predicate="target.email = source.email AND target.request_id = source.request_id",
+                source_alias="source",
+                target_alias="target"
+            )
+            .when_not_matched_insert_all()
+            .execute()
+        )
+        print(f"Ledger merge complete. {len(status_df)} records processed.")
+    except Exception:
+        print("Ledger not found, creating new one.")
+        write_deltalake(STATUS_LEDGER_PATH, status_df)
+        print("New ledger created.")
+
 
 if __name__ == "__main__":
     main()
