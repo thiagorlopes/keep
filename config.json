@@ -1,0 +1,32 @@
+{
+  "accounts": [
+    {
+      "Id": "001_statement_a",
+      "AccountNumber": "010-30800-0095971396",
+      "Type": "Operation",
+      "Balance": {
+        "Current": 2016.70
+      },
+      "Holder": {
+        "Name": "Joel Schaubel",
+        "Email": "joelschaubel@gmail.com"
+      },
+      "Institution": "Simplii",
+      "statementFile": "mock_statement_a.csv"
+    },
+    {
+      "Id": "002_statement_b",
+      "AccountNumber": "010-30800-0095983938",
+      "Type": "Operation",
+      "Balance": {
+        "Current": 418.52
+      },
+      "Holder": {
+        "Name": "Joel Schaubel",
+        "Email": "joelschaubel@gmail.com"
+      },
+      "Institution": "Simplii",
+      "statementFile": "mock_statement_b.csv"
+    }
+  ]
+}

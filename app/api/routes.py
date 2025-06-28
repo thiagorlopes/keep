@@ -4,7 +4,7 @@ import csv
 import zipfile
 import base64
 from uuid import uuid4
-from flask import Blueprint, jsonify, request, render_template, flash, send_from_directory, redirect, url_for, Response
+from flask import Blueprint, jsonify, request, render_template, flash, send_from_directory, redirect, url_for, Response, current_app
 from app.services import data_service
 
 api_bp = Blueprint('api', __name__, static_folder='static')
@@ -12,6 +12,7 @@ api_bp = Blueprint('api', __name__, static_folder='static')
 @api_bp.route('/', methods=['GET'])
 def index():
     """Serves the main page."""
+    current_app.logger.info("Serving index page.")
     return render_template('index.html')
 
 @api_bp.route('/download', methods=['POST'])
@@ -21,29 +22,32 @@ def download_statement():
     Returns a JSON response with base64-encoded CSV data for each account.
     """
     email = request.form.get('email')
+    if not email:
+        current_app.logger.error("Download request received without an email address.")
+        return jsonify({'error': 'Email is required.'}), 400
+
+    current_app.logger.info(f"Download request received for email: {email}")
     account_ids = data_service.get_account_ids_by_email(email)
 
     if not account_ids:
         # This is an API-like endpoint now, so we return JSON for errors too.
+        current_app.logger.warning(f"No accounts found for email: {email}")
         return jsonify({'error': f"Email '{email}' not found."}), 404
 
     statements_data = []
+    current_app.logger.info(f"Found {len(account_ids)} account(s) for email: {email}")
     for account_id in account_ids:
         account_details = next((acc for acc in data_service.ACCOUNTS if acc['Id'] == account_id), {})
-        transactions = data_service.load_transactions(account_id)
+        transactions, headers = data_service.load_raw_transactions(account_id)
 
         if not transactions:
+            current_app.logger.info(f"No transactions found for account ID: {account_id}. Skipping.")
             continue
 
         output = io.StringIO()
-        headers = ['AccountNumber', 'AccountType', 'Date', 'Description', 'Amount', 'Type', 'Balance']
         writer = csv.DictWriter(output, fieldnames=headers)
         writer.writeheader()
-
-        for t in transactions:
-            t['AccountNumber'] = account_details.get('AccountNumber')
-            t['AccountType'] = account_details.get('Type')
-            writer.writerow(t)
+        writer.writerows(transactions)
 
         # Encode the CSV data as a base64 string
         csv_string = output.getvalue()
@@ -57,8 +61,10 @@ def download_statement():
         })
 
     if not statements_data:
+        current_app.logger.warning(f"No transactions found across all accounts for email: {email}")
         return jsonify({'error': f"No transactions found for email '{email}'."}), 404
 
+    current_app.logger.info(f"Successfully prepared {len(statements_data)} statement(s) for email: {email}")
     return jsonify({
         'Email': email,
         'Statements': statements_data

@@ -9,8 +9,11 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the rest of the application's code into the container
-COPY . .
+# Copy the application code and config file into the container
+COPY ./app ./app
+COPY ./data ./data
+COPY config.json .
+COPY run.py .
 
 # Expose the port the app runs on
 EXPOSE 5000
