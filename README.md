@@ -55,6 +55,21 @@ docker run -d --rm -p 5000:5000 flinks-mock-api
 ```
 The application will be available at `http://127.0.0.1:5000`.
 
+### 3. Development with Hot-Reloading (Docker Compose)
+
+For active development, using Docker Compose is the most efficient method. It automatically reloads the server inside the container whenever you save a file.
+
+**A. Start the service:**
+```bash
+docker compose up
+```
+
+**B. Stop the service:**
+When you are finished, press `Ctrl+C` in the terminal, or run:
+```bash
+docker compose down
+```
+
 ### 2. Local Python Environment Setup
 
 If you prefer to run the application locally without Docker:
