@@ -57,12 +57,10 @@ For hands-on, ad-hoc analysis, you can use the provided JupyterLab environment t
 *   **Link:** [http://localhost:8888](http://localhost:8888)
 
 **Example:** To query the final daily metrics table, you can access the notebook `analytics/analytics_development.ipynb` and use the following DuckDB SQL syntax:
-```sql
+```python
 -- Example query in a Jupyter notebook cell
-SELECT *
-FROM main.fct_customer_daily_metrics
-ORDER BY date DESC
-LIMIT 10;
+result_dataframe = run_query("SELECT * FROM main.fct_daily_transactions_by_customer")
+result_dataframe.head(15)
 ```
 
 ### Other Resources
