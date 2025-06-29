@@ -43,7 +43,7 @@ This workflow is for analyzing a customer's data by pulling it directly from the
 #### Final Review and Approval
 For both workflows, after the analysis is displayed, you have a final review step. If you are comfortable with the results, you can click the **"Generate Taktile API Payload"** button. This simulates sending the final, approved features to the decisioning engine.
 
-### Power-User Workflow: Interactive Analysis with Jupyter
+### Interactive Analysis with Jupyter
 **Link:** [http://localhost:8888](http://localhost:8888)
 
 For analysts who want to dig deeper, perform ad-hoc queries, or validate intermediate data, a JupyterLab environment is provided.
