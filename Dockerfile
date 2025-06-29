@@ -19,9 +19,8 @@ CMD ["flask", "run", "--host=0.0.0.0"]
 # ===== Underwriter App Stage =====
 # This stage builds the image for the Streamlit application.
 FROM base as underwriter_app
-COPY 1_Manual_CSV_Upload.py .
-COPY app_utils.py .
-COPY ./pages ./pages
+COPY ./app ./app
+WORKDIR /app
 COPY config.json .
 COPY ./pipelines ./pipelines
 COPY ./analytics ./analytics

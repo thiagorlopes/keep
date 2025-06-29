@@ -25,7 +25,7 @@ services:
       - "8501:8501"
     volumes:
       # Mount the code and config so changes are reflected without rebuilding
-      - ./underwriter_app.py:/app/underwriter_app.py
+      - ./app:/app
       - ./config.json:/app/config.json
       - ./pipelines:/app/pipelines
       - ./analytics:/app/analytics
