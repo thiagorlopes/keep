@@ -1,11 +1,9 @@
+{{ config(materialized='table') }}
+
 -- This model creates a complete, daily time series for each customer over the
--- last 180 days, filling in any missing dates with the last known balance.
-
-WITH all_transactions AS (
-    SELECT * FROM {{ ref('all_transactions_by_customer') }}
-)
-
-,filtered_daily_transactions AS (
+-- last 180 days, calculating a revised daily balance and a final average.
+-- This process is often called "data densification" or "scaffolding".
+WITH all_daily_transactions AS (
     SELECT
         username,
         email,
@@ -15,10 +13,14 @@ WITH all_transactions AS (
         withdrawals,
         deposits,
         balance,
-        most_recent_statement_date_minus_180_days AS start_date,
-        most_recent_statement_date AS end_date
-    FROM all_transactions
-    WHERE date >= most_recent_statement_date_minus_180_days AND date <= most_recent_statement_date
+        most_recent_statement_date,
+        most_recent_statement_date_minus_30_days,
+        most_recent_statement_date_minus_60_days,
+        most_recent_statement_date_minus_90_days,
+        most_recent_statement_date_minus_180_days,
+        most_recent_statement_date_minus_365_days
+    FROM {{ ref('all_transactions_by_customer') }}
+    -- No date filtering here - include all available transaction data
 )
 
 ,dim_calendar AS (
@@ -30,9 +32,17 @@ WITH all_transactions AS (
     SELECT
         email,
         request_id,
-        start_date,
-        end_date
-    FROM filtered_daily_transactions
+        -- Use 180 days as default for scaffolding, but this can be easily changed
+        most_recent_statement_date_minus_180_days AS start_date,
+        most_recent_statement_date AS end_date,
+        -- Include all auxiliary date columns for reference
+        most_recent_statement_date,
+        most_recent_statement_date_minus_30_days,
+        most_recent_statement_date_minus_60_days,
+        most_recent_statement_date_minus_90_days,
+        most_recent_statement_date_minus_180_days,
+        most_recent_statement_date_minus_365_days
+    FROM all_daily_transactions
     GROUP BY ALL
 )
 
@@ -53,15 +63,13 @@ WITH all_transactions AS (
         scf.email,
         scf.request_id,
         scf.date,
-        trn.withdrawals,
-        trn.deposits,
-        trn.balance,
-        ROUND(AVG(trn.balance) OVER(PARTITION BY scf.email, scf.request_id, scf.date), 2) AS average_balance
+        -- Average balance for days with multiple transactions
+        AVG(trn.balance) AS average_balance
     FROM customer_scaffold AS scf
-    LEFT JOIN filtered_daily_transactions AS trn ON scf.email = trn.email
+    LEFT JOIN all_daily_transactions AS trn ON scf.email = trn.email
         AND scf.request_id = trn.request_id
         AND scf.date = trn.date
-/*        WHERE scf.date >= '2024-02-02' AND scf.date <= '2024-02-05'*/
+    GROUP BY ALL
 )
 
 ,daily_balances AS (
@@ -69,6 +77,7 @@ WITH all_transactions AS (
         email,
         request_id,
         date,
+        -- Fill forward the last known balance for days without transactions
         LAST_VALUE(average_balance IGNORE NULLS) OVER(
             PARTITION BY email, request_id
             ORDER BY date
@@ -77,7 +86,59 @@ WITH all_transactions AS (
     FROM padded_transactions
 )
 
-SELECT *
-FROM daily_balances
-GROUP BY ALL
-ORDER BY date DESC
+,daily_revenue AS (
+    SELECT
+        email,
+        request_id,
+        date,
+        -- Sum of all withdrawals for the day. This is the "Day Rev" from the sheet.
+        -- For now, all withdrawals are considered debits. A CASE statement could add more complex logic.
+        SUM(deposits) AS daily_revenue
+    FROM all_daily_transactions
+    GROUP BY ALL
+)
+
+,final_model AS (
+    SELECT
+        db.email,
+        db.request_id,
+        db.date,
+        db.revised_average_balance,
+        COALESCE(dr.daily_revenue, 0) as daily_revenue,
+        -- Include auxiliary date columns for reference
+        cdr.most_recent_statement_date,
+        cdr.most_recent_statement_date_minus_30_days,
+        cdr.most_recent_statement_date_minus_60_days,
+        cdr.most_recent_statement_date_minus_90_days,
+        cdr.most_recent_statement_date_minus_180_days,
+        cdr.most_recent_statement_date_minus_365_days
+    FROM daily_balances AS db
+    LEFT JOIN daily_revenue AS dr ON db.email = dr.email
+        AND db.request_id = dr.request_id
+        AND db.date = dr.date
+    LEFT JOIN customer_date_range AS cdr ON db.email = cdr.email
+        AND db.request_id = cdr.request_id
+)
+
+SELECT
+    fm.email,
+    fm.request_id,
+    fm.date,
+    ROUND(fm.revised_average_balance, 2) as revised_average_balance,
+    fm.daily_revenue,
+    -- Calculate weekly revenue based on the daily revenues using calendar week grouping
+    SUM(fm.daily_revenue) OVER (
+        PARTITION BY fm.email, fm.request_id, cal.week_of_year, cal.year_number
+    ) as weekly_revenue,
+    cal.week_of_year as week_number,
+    cal.day_of_year,
+    -- Auxiliary date columns for flexible analysis
+    fm.most_recent_statement_date,
+    fm.most_recent_statement_date_minus_30_days,
+    fm.most_recent_statement_date_minus_60_days,
+    fm.most_recent_statement_date_minus_90_days,
+    fm.most_recent_statement_date_minus_180_days,
+    fm.most_recent_statement_date_minus_365_days
+FROM final_model fm
+LEFT JOIN dim_calendar cal ON fm.date = cal.date_day
+ORDER BY fm.date DESC

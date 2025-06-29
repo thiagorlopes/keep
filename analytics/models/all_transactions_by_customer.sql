@@ -1,3 +1,5 @@
+{{ config(materialized='table') }}
+
 -- This model combines all transactions from the statements view
 -- and assigns a unique request_id.
 
@@ -37,6 +39,9 @@ SELECT
     CASE WHEN balance = '' THEN NULL ELSE CAST(balance AS DOUBLE) END AS balance,
 
     most_recent_statement_date,
+    (most_recent_statement_date - INTERVAL '30' DAY)::DATE AS most_recent_statement_date_minus_30_days,
+    (most_recent_statement_date - INTERVAL '60' DAY)::DATE AS most_recent_statement_date_minus_60_days,
     (most_recent_statement_date - INTERVAL '90' DAY)::DATE AS most_recent_statement_date_minus_90_days,
-    (most_recent_statement_date - INTERVAL '180' DAY)::DATE AS most_recent_statement_date_minus_180_days
+    (most_recent_statement_date - INTERVAL '180' DAY)::DATE AS most_recent_statement_date_minus_180_days,
+    (most_recent_statement_date - INTERVAL '365' DAY)::DATE AS most_recent_statement_date_minus_365_days
 FROM transactions_with_latest_date
