@@ -73,6 +73,43 @@ def download_statement():
         'Statements': statements_data
     })
 
+@api_bp.route('/api/statements', methods=['GET'])
+def get_combined_statements_by_email():
+    """
+    A simple endpoint to get all transactions for a given email,
+    combined from multiple statements into a single list.
+    """
+    email = request.args.get('email')
+    if not email:
+        return jsonify({'error': 'Email query parameter is required.'}), 400
+
+    current_app.logger.info(f"Combined statement request received for email: {email}")
+    account_ids = data_service.get_account_ids_by_email(email)
+
+    if not account_ids:
+        return jsonify({'error': f"Email '{email}' not found."}), 404
+
+    all_transactions = []
+    # Use a set to keep track of seen transaction identifiers to avoid duplicates
+    # assuming a tuple of key fields can uniquely identify a transaction
+    seen_transactions = set()
+
+    for account_id in account_ids:
+        transactions, _ = data_service.load_raw_transactions(account_id)
+        for t in transactions:
+            # Create a unique identifier for the transaction to avoid duplicates
+            # This assumes that (Date, Description, Amount) is unique. Adjust if needed.
+            transaction_id = (t.get('Date'), t.get('Description'), t.get('Deposits'), t.get('Withdrawals'))
+            if transaction_id not in seen_transactions:
+                all_transactions.append(t)
+                seen_transactions.add(transaction_id)
+
+    if not all_transactions:
+        return jsonify({'error': f"No transactions found for email '{email}'."}), 404
+
+    current_app.logger.info(f"Successfully combined {len(all_transactions)} transactions for email: {email}")
+    return jsonify(all_transactions)
+
 @api_bp.route('/v3/<uuid:customerId>/BankingServices/Authorize', methods=['POST'])
 def authorize(customerId):
     """Mock Authorize endpoint."""

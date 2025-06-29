@@ -1,21 +1,31 @@
-# Use an official lightweight Python image.
-FROM python:3.11-slim
-
-# Set the working directory in the container
+# ===== Base Stage =====
+# This stage installs the common Python dependencies for both services.
+FROM python:3.11-slim as base
 WORKDIR /app
-
-# Copy the requirements file and install dependencies
-# This step is done separately to leverage Docker's layer caching.
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the application code and config file into the container
+
+# ===== API Stage =====
+# This stage builds the image for the mock API service.
+FROM base as api
 COPY ./api_mock ./api_mock
 COPY config.json .
-
-# Expose the port the app runs on
+COPY run.py .
 EXPOSE 5000
-
-# Command to run the application
-ENV FLASK_APP=run.py
 CMD ["flask", "run", "--host=0.0.0.0"]
+
+
+# ===== Underwriter App Stage =====
+# This stage builds the image for the Streamlit application.
+FROM base as underwriter_app
+COPY 1_Manual_CSV_Upload.py .
+COPY app_utils.py .
+COPY ./pages ./pages
+COPY config.json .
+COPY ./pipelines ./pipelines
+COPY ./analytics ./analytics
+RUN mkdir -p /app/pipelines/data_lake/bronze && \
+    mkdir -p /app/pipelines/data_lake/analytics
+EXPOSE 8501
+CMD ["streamlit", "run", "1_Manual_CSV_Upload.py", "--server.address=0.0.0.0"]

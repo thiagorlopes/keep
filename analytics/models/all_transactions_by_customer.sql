@@ -1,5 +1,5 @@
--- This is a dbt model. It will be compiled to a CREATE TABLE statement.
--- The name of the table will be the name of this file: all_transactions_by_customer
+-- This model combines all transactions from the statements view
+-- and assigns a unique request_id.
 
 -- CTE to calculate the most recent statement date per login_id
 WITH transactions_with_latest_date AS (

@@ -1,10 +1,11 @@
-{{ config(materialized='table') }}
-
 -- This model creates a complete, daily time series for each customer over the
--- last 180 days, calculating a revised daily balance and a final average.
--- This process is often called "data densification" or "scaffolding".
+-- last 180 days, filling in any missing dates with the last known balance.
 
-WITH filtered_daily_transactions AS (
+WITH all_transactions AS (
+    SELECT * FROM {{ ref('all_transactions_by_customer') }}
+)
+
+,filtered_daily_transactions AS (
     SELECT
         username,
         email,
@@ -16,7 +17,7 @@ WITH filtered_daily_transactions AS (
         balance,
         most_recent_statement_date_minus_180_days AS start_date,
         most_recent_statement_date AS end_date
-    FROM {{ ref('all_transactions_by_customer') }}
+    FROM all_transactions
     WHERE date >= most_recent_statement_date_minus_180_days AND date <= most_recent_statement_date
 )
 
