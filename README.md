@@ -62,5 +62,8 @@ result_dataframe = run_query("SELECT * FROM main.fct_daily_transactions_by_custo
 result_dataframe.head()
 ```
 
-### Other Resources
+### List of Resources
 *   **Mock API Interface:** [http://localhost:5000](http://localhost:5000) - A simple UI to explore the raw data available from the mock API.
+*   **Analyst UI**: [http://localhost:8501](http://localhost:8501)
+*   **dbt Docs**: [http://localhost:8081](http://localhost:8081)
+*   **JupyterLab**: [http://localhost:8888](http://localhost:8888)
