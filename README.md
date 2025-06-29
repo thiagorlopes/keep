@@ -12,9 +12,8 @@ The system is composed of four main components, each designed to be modular and 
 
 ### 1. Mock API (`api_mock`)
 
-  <img width="1728" alt="image" src="https://github.com/user-attachments/assets/0d284991-03a5-4b71-ad39-e4a69a8a5069" />
-
-- **Purpose**: Mock implementation of a subset of the [Flinks API](https://docs.flinks.com/docs/welcome?_gl=1*je0k2v*_gcl_au*NDY3Mzk0Mzc5LjE3NTEwNDk5NzU.). For comprehensive API documentation with detailed endpoints and curl examples, see [docs/api_mock.md](docs/api_mock.md).
+- **Purpose**: Mock implementation of a subset of the [Flinks API](https://docs.flinks.com/docs/welcome?_gl=1*je0k2v*_gcl_au*NDY3Mzk0Mzc5LjE3NTEwNDk5NzU.). The user can either access the frontend and download the CSV files for a given customer, or request the data via the API. For comprehensive API documentation with detailed endpoints and curl examples, see [docs/api_mock.md](docs/api_mock.md).
+    <img width="1728" alt="image" src="https://github.com/user-attachments/assets/0d284991-03a5-4b71-ad39-e4a69a8a5069" />
 - **Technology**: A Flask-based API that serves mock bank statement data from CSV files.
 - **Production Strategy**: These pipelines can be easily migrated to a production environment and deployed on a cloud-based workflow orchestrator like Apache Airflow or Prefect. The data lake itself would be moved to a cloud storage solution like Amazon S3 or Google Cloud Storage.
 
@@ -22,7 +21,7 @@ The system is composed of four main components, each designed to be modular and 
 
 - **Purpose**: A set of robust data pipelines responsible for ingesting, cleaning, and transforming the raw data into a usable format.
 - **Technology**: The pipelines are built using Python with `deltalake` and `pandas`, processing data in stages and storing the output in a local, transactional data lake.
-- **Architecture**: The data lake is co-located with the pipelines at `pipelines/data_lake/` and follows a standard multi-hop architecture:
+- **Architecture**: The data lake is located at the root directory  at the location `data_lake/` and follows a standard multi-hop architecture:
     - **Bronze Layer**: Raw, unprocessed data is landed here from the source API.
     - **Silver Layer**: Data is cleaned, standardized, and enriched.
     - **Application Status Ledger**: A dedicated table (`application_status_ledger`) tracks the state of each application through the workflow.
