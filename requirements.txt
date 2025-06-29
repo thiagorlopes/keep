@@ -9,3 +9,4 @@ jupyter
 deltalake
 streamlit
 duckdb
+jupyterlab
