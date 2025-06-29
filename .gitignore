@@ -209,3 +209,13 @@ __marimo__/
 # Local Development
 .DS_Store
 data_lake/
+
+# dbt_packages
+analytics/dbt_packages/*
+analytics/package*
+
+# target
+target/
+
+# logs
+logs/
