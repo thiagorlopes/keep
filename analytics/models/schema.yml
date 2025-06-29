@@ -1,0 +1,41 @@
+version: 2
+
+models:
+  - name: all_transactions_by_customer
+    description: "This model is the foundational table for all customer transactions. It combines raw transaction data from all statements, cleanses data types, and enriches each transaction with key metadata, such as boolean flags for revenue/debits and a series of calculated date columns for time-based analysis. This table serves as the primary source for all downstream financial metrics. This table is built from a UNION ALL of all statements for a given customer. For that reason, the balance column is not a running balance, but rather the balance of the account at the time of the transaction and should be normalized."
+    columns:
+      - name: username
+        description: "The unique username of the customer."
+      - name: email
+        description: "The customer's email address, used as a primary identifier. Beware that this data might be in uppercase, so be sure to normalize it."
+      - name: request_id
+        description: "A unique identifier for each specific data request or analysis run."
+        tests:
+          - not_null
+      - name: date
+        description: "The exact date and time of the transaction in format YYYY-MM-DD."
+      - name: description
+        description: "The raw transaction description from the bank statement."
+      - name: withdrawals
+        description: "The amount withdrawn from the account for the transaction in format DOUBLE. If the column withdrawals is filled, the column deposits will be empty."
+      - name: deposits
+        description: "The amount deposited into the account for the transaction in format DOUBLE. If the column deposits is filled, the column withdrawals will be empty."
+      - name: balance
+        description: "The running balance of the account after the transaction. "
+      - name: is_revenue
+        description: "A boolean flag (TRUE/FALSE) indicating if the transaction is considered revenue (i.e., a deposit). A transaction is considered revenue if the column deposits is filled."
+      - name: is_debit
+        description: "A boolean flag (TRUE/FALSE) indicating if the transaction is considered a debit (i.e., a withdrawal). A transaction is considered a debit if the column withdrawals is filled."
+      - name: most_recent_statement_date
+        description: "The most recent date found across all statements for this customer's request. This date is used to calculate the date columns below."
+      - name: most_recent_statement_date_minus_30_days
+        description: "A calculated date marker for 30 days prior to the most recent statement date."
+      - name: most_recent_statement_date_minus_60_days
+        description: "A calculated date marker for 60 days prior to the most recent statement date."
+      - name: most_recent_statement_date_minus_90_days
+        description: "A calculated date marker for 90 days prior to the most recent statement date."
+      - name: most_recent_statement_date_minus_180_days
+        description: "A calculated date marker for 180 days prior to the most recent statement date."
+      - name: most_recent_statement_date_minus_365_days
+        description: "A calculated date marker for 365 days prior to the most recent statement date."
+
