@@ -5,7 +5,7 @@ customer_transactions_profile:
   outputs:
     dev:
       type: duckdb
-      path: '{{ env_var("DUCKDB_PATH", "../data_lake/prod.duckdb") }}'
+      path: "{{ env_var('DATA_LAKE_ROOT', '..') }}/data_lake/dbt.duckdb"
       schema: main
       extensions:
         - delta

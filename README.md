@@ -1,103 +1,103 @@
-# End-to-End Credit Scoring System: A Production-Ready MVP
+# Underwriting Analysis System
 
-This project is a Minimum Viable Product (MVP) for an end-to-end credit scoring system. While the current implementation uses lightweight, local-first tools for rapid development, it is built on a modular, scalable architecture designed for a seamless transition to a production-grade environment.
+This project implements a robust, code-driven system that replicates and enhances a Google Sheet-based underwriting process. It is designed not just as a script, but as a prototype for a scalable, maintainable, and user-friendly data product.
 
-## API Documentation
+## Architecture
 
-The system includes a mock API that simulates the [Flinks API](https://docs.flinks.com/docs/welcome) for development and testing purposes.
+The system is designed as a modern data pipeline with a clear separation of concerns, orchestrated within a containerized environment for consistency and ease of use.
 
-## High-Level Architecture
+```mermaid
+graph TD
+    subgraph "Local User"
+        A[Enter Email] --> B{Mock Flinks API};
+        B --> C[Download CSVs];
+        D[Upload CSVs] --> E{Streamlit UI - Manual};
+    end
 
-The system is composed of four main components, each designed to be modular and independently scalable. This separation of concerns is key to the system's flexibility, allowing individual components to be upgraded or replaced without impacting the rest of the system.
+    subgraph "Automated Workflow"
+        F{Mock Flinks API} -- Fetches data for all customers --> G{Streamlit UI - Automated};
+    end
 
-### 1. Mock API (`api_mock`)
+    subgraph "Data & Analytics Pipeline (Docker)"
+        E -- Triggers --> H[Pipeline];
+        G -- Triggers --> H[Pipeline];
+        H -- 1. Ingest & Clean --> I(Bronze/Silver Data Lake);
+        I -- 2. Transform --> J(dbt);
+        J -- 3. Calculate Features --> K(Analytics DB);
+        K -- 4. Display Results --> E;
+        K -- 4. Display Results --> G;
+    end
 
-- **Purpose**: Mock implementation of a subset of the [Flinks API](https://docs.flinks.com/docs/welcome?_gl=1*je0k2v*_gcl_au*NDY3Mzk0Mzc5LjE3NTEwNDk5NzU.). The user can either access the frontend and download the CSV files for a given customer, or request the data via the API. For comprehensive API documentation with detailed endpoints and curl examples, see [docs/api_mock.md](docs/api_mock.md).
-    <img width="1728" alt="image" src="https://github.com/user-attachments/assets/0d284991-03a5-4b71-ad39-e4a69a8a5069" />
-- **Technology**: A Flask-based API that serves mock bank statement data from CSV files.
-- **Production Strategy**: These pipelines can be easily migrated to a production environment and deployed on a cloud-based workflow orchestrator like Apache Airflow or Prefect. The data lake itself would be moved to a cloud storage solution like Amazon S3 or Google Cloud Storage.
-
-### 2. Data Pipelines (`pipelines`)
-
-- **Purpose**: A set of robust data pipelines responsible for ingesting, cleaning, and transforming the raw data into a usable format.
-- **Technology**: The pipelines are built using Python with `deltalake` and `pandas`, processing data in stages and storing the output in a local, transactional data lake.
-- **Architecture**: The data lake is located at the root directory  at the location `data_lake/` and follows a standard multi-hop architecture:
-    - **Bronze Layer**: Raw, unprocessed data is landed here from the source API.
-    - **Silver Layer**: Data is cleaned, standardized, and enriched.
-    - **Application Status Ledger**: A dedicated table (`application_status_ledger`) tracks the state of each application through the workflow.
-- **Key Feature: Idempotency & ACID Transactions**: The entire data lake is built on **Delta Lake**. Instead of manual state management, the pipelines leverage atomic `MERGE` operations. This provides ACID guarantees and ensures that every pipeline run is idempotent, preventing data duplication and corruption. This is a modern, industry-standard approach to building reliable data platforms.
-- **Production Strategy**: These pipelines can be easily migrated to a production environment and deployed on a cloud-based workflow orchestrator like Apache Airflow or Prefect. The data lake itself would be moved to a cloud storage solution like Amazon S3 or Google Cloud Storage.
-
-### 3. Analytics (`analytics`)
-
-- **Purpose**: This component is responsible for running analytics on the cleaned data to generate insights and features for the credit scoring model.
-- **Technology**: A dbt (Data Build Tool) project that uses DuckDB as its data warehouse. This allows for rapid, SQL-based development of data models and transformations on the local Parquet files.
-  <img width="1679" alt="image" src="https://github.com/user-attachments/assets/d577adea-af2b-4820-9f3f-e5eae0a596c1" />
-- **Production Strategy**: In a production setting, this dbt project would be reconfigured to connect to a cloud data warehouse like Snowflake, BigQuery, or Redshift, enabling it to handle much larger datasets and more complex analytical workloads.
-
-### 4. Taktile (Not Implemented)
-
-- **Purpose**: This future component will be responsible for the final credit decisioning.
-- **Implementation Plan**: It will take the features generated by the analytics layer and send them to a decisioning engine (like Taktile) to get a credit score and recommendation. The results will then be stored back in our data warehouse for analysis and monitoring.
-
-## Path to Production
-
-The current MVP is fully functional for local development and testing. The following steps outline the path to a full production deployment:
-
-1.  **Swap the Mock API**: Reconfigure the `api_mock` client to connect to the live Flinks API.
-2.  **Deploy Pipelines**: Deploy the data pipelines to a workflow orchestrator like **Apache Airflow** for scheduled, reliable execution.
-3.  **Scale the Data Lake**: Migrate the data lake from local storage to a cloud object store like **Amazon S3** or **Google Cloud Storage**.
-4.  **Upgrade the Data Warehouse**: Transition the analytics from DuckDB to a production data warehouse like **Snowflake**, **BigQuery**, or **Redshift** to handle large-scale data.
-5.  **Implement the Decisioning Logic**: Build out the Taktile integration to connect the feature data to the live decisioning engine.
-
-## Getting Started
-
-### Prerequisites
-- Docker & Docker Compose
-- Python 3.10+ (for local script execution)
-
-### Running the End-to-End Demo
-
-This workflow demonstrates the entire system, from starting the API to running the data pipelines and the analytics models.
-
-**Step 1: Start the Services**
-
-First, start the mock API service using Docker Compose. This will also build the necessary container image.
-
-```bash
-docker-compose up --build
-```
-Leave this running in a terminal. The API will now be available at `http://127.0.0.1:5000`.
-
-**Step 2: Run the Data Pipelines**
-
-In a **new terminal**, you can run the data pipelines. If you haven't already, install the Python dependencies:
-```bash
-pip install -r requirements.txt
+    subgraph "Decisioning (Hypothetical)"
+        E -- 5. Analyst Review & Approve --> L(Send to Taktile);
+        G -- 5. Analyst Review & Approve --> L;
+        L -- Returns Limit --> M[Final Credit Limit];
+    end
 ```
 
-Now, run the pipelines sequentially.
+## Key Features
 
-1.  **Run the ingestion pipeline** to fetch data from the API and populate the bronze layer:
-    ```bash
-    python -m pipelines.ingest_statements
-    ```
-2.  **Run the transformation pipeline** to clean the data and update the silver and ledger tables:
-    ```bash
-    python -m pipelines.transform_statements
-    ```
+*   **Mock Flinks API:** A simple Flask application that simulates a real-world banking API (`/api_mock`), allowing for the retrieval of customer statement data by email.
+*   **Declarative Transformations:** A `dbt` project (`/analytics`) that handles all business logic, feature engineering, and data aggregation in a clean, modular, and testable way.
+*   **Tiered Data Lake:** A structured data lake (`/data_lake`) with Bronze (raw) and Silver (cleaned) layers, built using the Delta Lake format for reliability and ACID transactions.
+*   **Interactive Analyst UI:** A multi-page Streamlit application that provides two distinct workflows for underwriters, including data visualizations and a clear "human-in-the-loop" review step.
+*   **Containerized Environment:** The entire application is containerized with Docker and orchestrated with `docker-compose`, ensuring a consistent, one-command setup for any user.
 
-**Step 3: Run the Analytics Models**
+For a more detailed technical overview of the system architecture, components, and path-to-production strategy, please see the [Technical Reference](./docs/technical_reference.md).
 
-With the data processed, you can now run the dbt models to generate the final analytics tables.
+## How to Run the System
 
-1.  Navigate to the analytics directory:
-    ```bash
-    cd analytics
-    ```
-2.  Run the dbt models:
-    ```bash
-    dbt run
-    ```
+**Prerequisites:**
+*   Docker
+*   `make`
 
-After completing these steps, you will have successfully executed the entire data flow from end to end. You can explore the final tables in the `pipelines/data_lake/analytics` directory.
+From the root of the project directory, simply run:
+
+```bash
+make start
+```
+
+This command will build the necessary Docker images, start all services, and make the application available.
+
+## User Workflows
+
+Once the system is running, you can access the different components at the following URLs:
+
+*   **Streamlit Analyst UI:** [http://localhost:8501](http://localhost:8501)
+*   **Mock Flinks API (for exploration):** [http://localhost:5000](http://localhost:5000)
+
+### Workflow 1: Manual Analysis for a Single Customer
+
+This workflow allows an analyst to manually fetch statements for a specific customer and run them through the pipeline.
+
+1.  **Fetch Statements:**
+    *   Navigate to the Mock API at [http://localhost:5000](http://localhost:5000).
+    *   Enter a customer email (e.g., `customer-a@example.com` or `customer-b@example.com`) and click "Download Statements".
+    *   Your browser will download a `.zip` file containing the statement CSVs. Unzip this file.
+2.  **Run Analysis:**
+    *   Navigate to the Streamlit UI at [http://localhost:8501](http://localhost:8501).
+    *   On the **Manual CSV Upload** page, drag and drop the downloaded CSV files into the uploader.
+    *   Click the "Run Analysis on Uploaded CSVs" button.
+3.  **Review and Approve:**
+    *   The application will display the results, including key metrics and visualizations.
+    *   If you are comfortable with the analysis, you can click the "Generate Taktile API Payload" button to simulate sending the data to the decisioning engine.
+
+### Workflow 2: Automated Analysis
+
+This workflow simulates a more automated process, pulling data for a customer directly from the API.
+
+1.  **Run Analysis:**
+    *   Navigate to the Streamlit UI at [http://localhost:8501](http://localhost:8501).
+    *   From the sidebar, navigate to the **Automated API Run** page.
+    *   Enter the email of the customer you wish to analyze and click "Ingest from Mock API and Run Analysis".
+2.  **Review and Approve:**
+    *   The application will display the results just as in the manual workflow.
+    *   Review the data and, if comfortable, simulate the call to the Taktile engine.
+
+## Next Steps & Vision
+
+This project provides a strong foundation. The next phase of work would focus on completing the underwriting logic and productionizing the system:
+
+*   **dbt Feature Engineering:** Implement the remaining variables from the Underwriter Google Sheet as models in the dbt project.
+*   **Taktile Integration:** Replace the "Simulate Payload" button with a real API call to a Taktile endpoint, which would receive the engineered features and return a final credit limit.
+*   **Ledger Updates:** Update the `application_status_ledger` to `'COMPLETED'` or `'FAILED'` based on the result of the Taktile API call, providing full operational auditability.

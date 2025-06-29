@@ -1,7 +1,6 @@
 {{ config(materialized='view') }}
 
--- This model reads the Parquet files directly from the silver Delta table directory.
--- This is a reliable way to read the data, though it bypasses the Delta transaction log.
+-- This model reads all Parquet files from the Silver layer of the data lake,
+-- which contains the cleaned and standardized transaction data.
 
-SELECT *
-FROM read_parquet('../data_lake/silver/*.parquet', union_by_name=true)
+SELECT * FROM read_parquet("{{ env_var('DATA_LAKE_ROOT', '..') }}/data_lake/silver/*.parquet")

@@ -8,8 +8,3 @@ profile: 'customer_transactions_profile'
 
 # Paths
 model-paths: ["models"]
-
-# Default model config
-models:
-  customer_transactions:
-    +materialized: table
