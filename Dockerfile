@@ -38,3 +38,13 @@ WORKDIR /app/analytics
 # Serve the generated documentation on port 8081
 EXPOSE 8081
 CMD ["python", "-m", "http.server", "8081", "--directory", "./target"]
+
+
+# ===== Jupyter Stage =====
+# This stage runs a JupyterLab server for ad-hoc analysis.
+FROM base as jupyter
+WORKDIR /app
+
+# Expose the Jupyter port
+EXPOSE 8888
+CMD ["jupyter", "lab", "--ip=0.0.0.0", "--port=8888", "--no-browser", "--allow-root", "--NotebookApp.token=''"]

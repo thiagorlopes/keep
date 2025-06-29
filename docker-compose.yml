@@ -55,3 +55,20 @@ services:
       - api
     environment:
       - DATA_LAKE_ROOT=/app
+
+  jupyter:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: jupyter
+    ports:
+      - "8888:8888"
+    volumes:
+      # Mount all relevant project directories for full access
+      - ./analytics:/app/analytics
+      - ./data_lake:/app/data_lake
+      - ./pipelines:/app/pipelines
+      - ./api_mock:/app/api_mock
+      - ./docs:/app/docs
+    depends_on:
+      - api
