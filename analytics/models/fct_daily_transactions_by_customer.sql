@@ -1,8 +1,8 @@
 {{ config(materialized='table') }}
 
 -- This model creates a complete, daily time series for each customer over the
--- last 180 days, calculating a revised daily balance and a final average.
--- This process is often called "data densification" or "scaffolding".
+-- last 180 days, filling in any missing dates with the last known balance.
+    
 WITH all_daily_transactions AS (
     SELECT
         username,
@@ -19,22 +19,23 @@ WITH all_daily_transactions AS (
         most_recent_statement_date_minus_90_days,
         most_recent_statement_date_minus_180_days,
         most_recent_statement_date_minus_365_days
-    FROM {{ ref('all_transactions_by_customer') }}
-    -- No date filtering here - include all available transaction data
+    FROM {{ ref('all_transactions_by_customer')}}
 )
 
 ,dim_calendar AS (
     SELECT *
-    FROM {{ ref('dim_calendar') }}
+    FROM main.dim_calendar
 )
 
 ,customer_date_range AS (
     SELECT
         email,
         request_id,
+        
         -- Use 180 days as default for scaffolding, but this can be easily changed
         most_recent_statement_date_minus_180_days AS start_date,
         most_recent_statement_date AS end_date,
+        
         -- Include all auxiliary date columns for reference
         most_recent_statement_date,
         most_recent_statement_date_minus_30_days,
@@ -42,7 +43,7 @@ WITH all_daily_transactions AS (
         most_recent_statement_date_minus_90_days,
         most_recent_statement_date_minus_180_days,
         most_recent_statement_date_minus_365_days
-    FROM all_daily_transactions
+    FROM {{ref('all_transactions_by_customer')}}
     GROUP BY ALL
 )
 
@@ -64,12 +65,10 @@ WITH all_daily_transactions AS (
         scf.request_id,
         scf.date,
         -- Average balance for days with multiple transactions
-        AVG(trn.balance) AS average_balance
-    FROM customer_scaffold AS scf
+        ROUND(AVG(trn.balance) OVER(PARTITION BY scf.email, scf.request_id, scf.date), 2) AS average_balance        FROM customer_scaffold AS scf
     LEFT JOIN all_daily_transactions AS trn ON scf.email = trn.email
         AND scf.request_id = trn.request_id
         AND scf.date = trn.date
-    GROUP BY ALL
 )
 
 ,daily_balances AS (
@@ -85,7 +84,7 @@ WITH all_daily_transactions AS (
         ) AS revised_average_balance
     FROM padded_transactions
 )
-
+    
 ,daily_revenue AS (
     SELECT
         email,
@@ -118,6 +117,8 @@ WITH all_daily_transactions AS (
         AND db.date = dr.date
     LEFT JOIN customer_date_range AS cdr ON db.email = cdr.email
         AND db.request_id = cdr.request_id
+    WHERE db.date > cdr.most_recent_statement_date_minus_180_days
+    GROUP BY ALL
 )
 
 SELECT

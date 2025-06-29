@@ -1,4 +1,4 @@
-{{ config(materialized='view') }}
+{{ config(materialized='table') }}
 
 -- This model reads all Parquet files from the Silver layer of the data lake,
 -- which contains the cleaned and standardized transaction data.
