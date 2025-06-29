@@ -73,7 +73,7 @@ This workflow allows an analyst to manually fetch statements for a specific cust
 
 1.  **Fetch Statements:**
     *   Navigate to the Mock API at [http://localhost:5000](http://localhost:5000).
-    *   Enter a customer email (e.g., `customer-a@example.com` or `customer-b@example.com`) and click "Download Statements".
+    *   Enter a customer email (e.g., `joelschaubel@gmail.com`) and click "Download Statements".
     *   Your browser will download a `.zip` file containing the statement CSVs. Unzip this file.
 2.  **Run Analysis:**
     *   Navigate to the Streamlit UI at [http://localhost:8501](http://localhost:8501).
