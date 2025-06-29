@@ -67,6 +67,16 @@ def run_analysis_pipeline(source_df: pd.DataFrame):
             if dbt_process.stdout:
                 logger.info(f"{log_prefix} dbt stdout:\n{dbt_process.stdout}")
 
+            logger.info(f"{log_prefix} Generating dbt documentation...")
+            dbt_docs_process = subprocess.run(
+                ["dbt", "docs", "generate"],
+                cwd="analytics",
+                check=True,
+                capture_output=True,
+                text=True
+            )
+            logger.info(f"{log_prefix} dbt docs generation completed successfully.")
+
             # --- Step 3: Generating Final Report ---
             logger.info(f"{log_prefix} Starting Step 3/3: Reading final results from dbt database at {DBT_DB_PATH}...")
             with duckdb.connect(DBT_DB_PATH, read_only=True) as con:
