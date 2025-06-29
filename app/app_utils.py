@@ -57,7 +57,7 @@ def run_analysis_pipeline(source_df: pd.DataFrame):
             # --- Step 2: Calculating Underwriting Metrics ---
             logger.info(f"{log_prefix} Starting Step 2/3: Calculating underwriting metrics via dbt.")
             dbt_process = subprocess.run(
-                ["dbt", "run"],
+                ["dbt", "run", "--full-refresh"],
                 cwd="analytics",
                 check=True,
                 capture_output=True,
