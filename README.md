@@ -64,6 +64,7 @@ This command will build the necessary Docker images, start all services, and mak
 Once the system is running, you can access the different components at the following URLs:
 
 *   **Streamlit Analyst UI:** [http://localhost:8501](http://localhost:8501)
+*   **dbt Documentation:** [http://localhost:8081](http://localhost:8081)
 *   **Mock Flinks API (for exploration):** [http://localhost:5000](http://localhost:5000)
 
 ### Workflow 1: Manual Analysis for a Single Customer

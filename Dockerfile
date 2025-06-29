@@ -29,3 +29,13 @@ RUN mkdir -p /app/pipelines/data_lake/bronze && \
     mkdir -p /app/pipelines/data_lake/analytics
 EXPOSE 8501
 CMD ["streamlit", "run", "1_Manual_CSV_Upload.py", "--server.address=0.0.0.0"]
+
+
+# ===== dbt Docs Stage =====
+# This stage generates and serves the dbt documentation website.
+FROM base as dbt_docs
+WORKDIR /app/analytics
+
+# Serve the generated documentation on port 8081
+EXPOSE 8081
+CMD ["python", "-m", "http.server", "8081", "--directory", "./target"]
