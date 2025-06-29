@@ -1,6 +1,8 @@
 {{ config(materialized='table') }}
 
--- This model reads all Parquet files from the Silver layer of the data lake,
--- which contains the cleaned and standardized transaction data.
+-- This model reads data from the Silver layer Delta table.
+-- By using delta_scan(), we instruct DuckDB's delta extension
+-- to correctly read the latest version of the table from the transaction log,
+-- ignoring any orphaned files from previous overwrites.
 
-SELECT * FROM read_parquet("{{ env_var('DATA_LAKE_ROOT', '..') }}/data_lake/silver/*.parquet")
+SELECT * FROM delta_scan("{{ env_var('DATA_LAKE_ROOT', '..') }}/data_lake/silver")
