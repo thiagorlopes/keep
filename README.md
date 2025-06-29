@@ -33,7 +33,7 @@ This workflow is for analyzing statements that you have saved on your computer.
     *   Enter a customer email (e.g., `joelschaubel@gmail.com`) and click "Download Statements".
     *   A `.zip` file containing CSV statements will be downloaded. Unzip this file.
 2.  **Upload and Run:**
-    *   On the main page of the Analyst UI, drag and drop the downloaded CSV files into the uploader.
+    *   On the main page of the [Analyst UI](http://localhost:8501), drag and drop the downloaded CSV files into the uploader.
     *   Click the **"Run Analysis on Uploaded CSVs"** button.
 3.  **View Results:** The system will process the files and display a summary of the results.
 
