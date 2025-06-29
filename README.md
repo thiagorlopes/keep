@@ -2,7 +2,7 @@
 
 This application provides a simple, robust, and reliable way to process bank statements and generate the necessary metrics for underwriting analysis.
 
-It replaces the manual Google Sheet process with a code-driven system, ensuring that calculations are consistent, auditable, and transparent.
+It replaces the manual [Google Sheet](https://docs.google.com/spreadsheets/d/18awE6NT6wYy191_cnBDhWObZPEaH3adetrLdf948VCI/edit?gid=0#gid=0) process with a code-driven system, ensuring that calculations are consistent, auditable, and transparent.
 
 ## How to Run the System
 
