@@ -19,40 +19,51 @@ This single command will start all the necessary services.
 
 ## Analyst Workflows
 
-Once the system is running, you can use the following tools to perform your analysis.
+The process for an analyst is straightforward: first, you run the main pipeline to process customer statements. Afterwards, you can use the provided tools to explore the results.
 
-### Primary Workflow: The Analyst UI
+### Step 1: Running the Analysis Pipeline
+There are two ways to run the pipeline, both available in the main **Analyst UI**:
 **Link:** [http://localhost:8501](http://localhost:8501)
 
-This is the main web application for day-to-day underwriting tasks. It provides two methods for analyzing customer statements.
-
-#### 1. Manual CSV Upload
+#### Option A: Manual CSV Upload
 This workflow is for analyzing statements that you have saved on your computer.
 
-1.  Visit [http://localhost:5000](http://localhost:5000) and input the desired customer email (ex.: joelschaubel@gmail.com). Click on `Download Statements` for downloading a zip file with each customer statement as a CSV. 
-2.  On the main page of [http://localhost:8501](http://localhost:8501), drag and drop one or more customer statement CSVs into the uploader.
-3.  Click the **"Run Analysis on Uploaded CSVs"** button.
-4.  The system will process the files and display the results, including key metrics and visualizations.
+1.  **Get Statement Files:** First, you need statement files to analyze. You can get sample files from the included Mock API:
+    *   Navigate to the **Mock API Interface** at [http://localhost:5000](http://localhost:5000).
+    *   Enter a customer email (e.g., `joelschaubel@gmail.com`) and click "Download Statements".
+    *   A `.zip` file containing CSV statements will be downloaded. Unzip this file.
+2.  **Upload and Run:**
+    *   On the main page of the Analyst UI, drag and drop the downloaded CSV files into the uploader.
+    *   Click the **"Run Analysis on Uploaded CSVs"** button.
+3.  **View Results:** The system will process the files and display a summary of the results.
 
-#### 2. Automated API Run
-This workflow is for analyzing a customer's data by pulling it directly from the system.
-
+#### Option B: Automated API Run
+This workflow is for analyzing a customer's data by pulling it directly from the mocked Flinks system.
 1.  Using the sidebar, navigate to the **"Automated API Run"** page.
 2.  Enter the customer's email address and click **"Ingest from Mock API and Run Analysis"**.
-3.  The system will fetch the data, process it, and display the results.
+3.  The system will fetch the data, process it, and display a summary.
 
-#### Final Review and Approval
-For both workflows, after the analysis is displayed, you have a final review step. If you are comfortable with the results, you can click the **"Generate Taktile API Payload"** button. This simulates sending the final, approved features to the decisioning engine.
+### Step 2: Exploring the Results
+After a pipeline run is complete, you can dig deeper into the data and the business logic using the following tools.
 
-### Interactive Analysis with Jupyter
-**Link:** [http://localhost:8888](http://localhost:8888)
+#### Understanding the Data: dbt Docs
+First, to understand what tables were created, what each column means, and to see the business logic, use the live data documentation.
+*   **Link:** [http://localhost:8081](http://localhost:8081)
 
-For analysts who want to dig deeper, perform ad-hoc queries, or validate intermediate data, a JupyterLab environment is provided.
+The dbt docs provide an interactive dependency graph and a full data dictionary, making it easy to understand how the metrics are calculated.
 
-1.  Navigate to the JupyterLab link above.
-2.  In the file browser on the left, you can see the project's directory structure, including the `/data_lake` and `/analytics` folders.
-3.  You can open the `analytics/analytics_development.ipynb` notebook as a starting point, or create a new one to directly query the data using DuckDB (e.g., `SELECT * FROM read_parquet('data_lake/silver/*.parquet')`).
+#### Querying the Data: JupyterLab
+For hands-on, ad-hoc analysis, you can use the provided JupyterLab environment to write your own SQL queries against the generated data.
+*   **Link:** [http://localhost:8888](http://localhost:8888)
+
+**Example:** To query the final daily metrics table, you can access the notebook `analytics/analytics_development.ipynb` and use the following DuckDB SQL syntax:
+```sql
+-- Example query in a Jupyter notebook cell
+SELECT *
+FROM main.fct_customer_daily_metrics
+ORDER BY date DESC
+LIMIT 10;
+```
 
 ### Other Resources
-*   **Live Data Model Documentation:** [http://localhost:8081](http://localhost:8081) - An interactive website showing how all the data models are calculated and related.
 *   **Mock API Interface:** [http://localhost:5000](http://localhost:5000) - A simple UI to explore the raw data available from the mock API.
