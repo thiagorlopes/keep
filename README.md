@@ -32,6 +32,7 @@ The system is composed of four main components, each designed to be modular and 
 
 - **Purpose**: This component is responsible for running analytics on the cleaned data to generate insights and features for the credit scoring model.
 - **Technology**: A dbt (Data Build Tool) project that uses DuckDB as its data warehouse. This allows for rapid, SQL-based development of data models and transformations on the local Parquet files.
+  <img width="1679" alt="image" src="https://github.com/user-attachments/assets/d577adea-af2b-4820-9f3f-e5eae0a596c1" />
 - **Production Strategy**: In a production setting, this dbt project would be reconfigured to connect to a cloud data warehouse like Snowflake, BigQuery, or Redshift, enabling it to handle much larger datasets and more complex analytical workloads.
 
 ### 4. Taktile (Not Implemented)
