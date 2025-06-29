@@ -56,11 +56,10 @@ The dbt docs provide an interactive dependency graph and a full data dictionary,
 For hands-on, ad-hoc analysis, you can use the provided JupyterLab environment to write your own SQL queries against the generated data.
 *   **Link:** [http://localhost:8888](http://localhost:8888)
 
-**Example:** To query the final daily metrics table, you can access the notebook `analytics/analytics_development.ipynb` and use the following DuckDB SQL syntax:
+**Example:** To query the final daily metrics table, you can access the notebook `analytics/analytics_development.ipynb`, run the first cell and use the following command in a new cell:
 ```python
--- Example query in a Jupyter notebook cell
 result_dataframe = run_query("SELECT * FROM main.fct_daily_transactions_by_customer")
-result_dataframe.head(15)
+result_dataframe.head()
 ```
 
 ### Other Resources
