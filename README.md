@@ -12,6 +12,8 @@ The system is composed of four main components, each designed to be modular and 
 
 ### 1. Mock API (`api_mock`)
 
+  <img width="1728" alt="image" src="https://github.com/user-attachments/assets/0d284991-03a5-4b71-ad39-e4a69a8a5069" />
+
 - **Purpose**: Mock implementation of a subset of the [Flinks API](https://docs.flinks.com/docs/welcome?_gl=1*je0k2v*_gcl_au*NDY3Mzk0Mzc5LjE3NTEwNDk5NzU.). For comprehensive API documentation with detailed endpoints and curl examples, see [docs/api_mock.md](docs/api_mock.md).
 - **Technology**: A Flask-based API that serves mock bank statement data from CSV files.
 - **Production Strategy**: These pipelines can be easily migrated to a production environment and deployed on a cloud-based workflow orchestrator like Apache Airflow or Prefect. The data lake itself would be moved to a cloud storage solution like Amazon S3 or Google Cloud Storage.
