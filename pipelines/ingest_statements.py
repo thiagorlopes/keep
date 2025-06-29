@@ -36,10 +36,9 @@ def fetch_data_from_api(customer_id, login_id, account_number, api_url_template=
 
 def main():
     """Main function to run the bronze ingestion pipeline."""
-    # Define the data lake path relative to this script's location
-    PIPELINES_DIR = Path(__file__).parent
-    BRONZE_PATH = PIPELINES_DIR / 'data_lake/bronze'
-    CONFIG_PATH = PIPELINES_DIR.parent / 'config.json'
+    # Define the data lake path at the project root
+    BRONZE_PATH = 'data_lake/bronze'
+    CONFIG_PATH = 'config.json'
 
     # Load account information from config.json
     try:

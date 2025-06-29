@@ -8,10 +8,9 @@ def main():
     silver layer and the scoring_status ledger. This pipeline is fully
     idempotent and scalable.
     """
-    PIPELINES_DIR = Path(__file__).parent
-    BRONZE_PATH = PIPELINES_DIR / 'data_lake/bronze'
-    SILVER_PATH = PIPELINES_DIR / 'data_lake/silver'
-    STATUS_LEDGER_PATH = PIPELINES_DIR / 'data_lake/application_status_ledger'
+    BRONZE_PATH = 'data_lake/bronze'
+    SILVER_PATH = 'data_lake/silver'
+    STATUS_LEDGER_PATH = 'data_lake/application_status_ledger'
 
     # Read the entire bronze table. In a production scenario with large data,
     # this would be optimized with streaming reads or incremental processing.
