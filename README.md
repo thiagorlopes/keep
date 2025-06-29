@@ -6,20 +6,13 @@ This project is a Minimum Viable Product (MVP) for an end-to-end credit scoring 
 
 The system includes a mock API that simulates the [Flinks API](https://docs.flinks.com/docs/welcome) for development and testing purposes.
 
-📖 **For comprehensive API documentation with detailed endpoints and curl examples, see [docs/api_mock.md](docs/api_mock.md)**
-
-The API includes:
-- Web interface endpoints for manual statement downloads
-- RESTful API endpoints that simulate Flinks Banking Services
-- Complete workflow examples and test data
-
 ## High-Level Architecture
 
 The system is composed of four main components, each designed to be modular and independently scalable. This separation of concerns is key to the system's flexibility, allowing individual components to be upgraded or replaced without impacting the rest of the system.
 
 ### 1. Mock API (`api_mock`)
 
-- **Purpose**: Mock implementation of a subset of the [Flinks API](https://docs.flinks.com/docs/welcome?_gl=1*je0k2v*_gcl_au*NDY3Mzk0Mzc5LjE3NTEwNDk5NzU.), providing realistic statement data for development and testing.
+- **Purpose**: Mock implementation of a subset of the [Flinks API](https://docs.flinks.com/docs/welcome?_gl=1*je0k2v*_gcl_au*NDY3Mzk0Mzc5LjE3NTEwNDk5NzU.). For comprehensive API documentation with detailed endpoints and curl examples, see [docs/api_mock.md](docs/api_mock.md).
 - **Technology**: A Flask-based API that serves mock bank statement data from CSV files.
 - **Production Strategy**: These pipelines can be easily migrated to a production environment and deployed on a cloud-based workflow orchestrator like Apache Airflow or Prefect. The data lake itself would be moved to a cloud storage solution like Amazon S3 or Google Cloud Storage.
 
@@ -27,7 +20,7 @@ The system is composed of four main components, each designed to be modular and 
 
 - **Purpose**: A set of robust data pipelines responsible for ingesting, cleaning, and transforming the raw data into a usable format.
 - **Technology**: The pipelines are built using Python with `deltalake` and `pandas`, processing data in stages and storing the output in a local, transactional data lake.
-- **Architecture**: The data lake is located at `data_lake/` and follows a standard multi-hop architecture:
+- **Architecture**: The data lake is co-located with the pipelines at `pipelines/data_lake/` and follows a standard multi-hop architecture:
     - **Bronze Layer**: Raw, unprocessed data is landed here from the source API.
     - **Silver Layer**: Data is cleaned, standardized, and enriched.
     - **Application Status Ledger**: A dedicated table (`application_status_ledger`) tracks the state of each application through the workflow.
@@ -105,4 +98,4 @@ With the data processed, you can now run the dbt models to generate the final an
     dbt run
     ```
 
-After completing these steps, you will have successfully executed the entire data flow from end to end. You can explore the final tables in the `data_lake/` directory.
+After completing these steps, you will have successfully executed the entire data flow from end to end. You can explore the final tables in the `pipelines/data_lake/analytics` directory.
