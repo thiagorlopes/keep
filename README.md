@@ -63,7 +63,7 @@ result_dataframe.head()
 ```
 
 ### List of Resources
-*   **Mock API Interface:** [http://localhost:5000](http://localhost:5000) - A simple UI to explore the raw data available from the mock API.
+*   **Mock API Interface:** [http://localhost:5000](http://localhost:5000)
 *   **Analyst UI**: [http://localhost:8501](http://localhost:8501)
 *   **dbt Docs**: [http://localhost:8081](http://localhost:8081)
 *   **JupyterLab**: [http://localhost:8888](http://localhost:8888)
