@@ -1,6 +1,6 @@
 .PHONY: down start
 
-down:
+stop:
 	docker-compose down
 
 start: down

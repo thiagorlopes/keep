@@ -21,12 +21,12 @@ WITH all_daily_transactions AS (
         most_recent_statement_date_minus_90_days,
         most_recent_statement_date_minus_180_days,
         most_recent_statement_date_minus_365_days
-    FROM {{ ref('all_transactions_by_customer') }}
+    FROM main.all_transactions_by_customer
 )
 
 ,dim_calendar AS (
     SELECT *
-    FROM {{ ref('dim_calendar') }}
+    FROM main.dim_calendar
 )
 
 ,customer_date_range AS (
@@ -72,6 +72,7 @@ WITH all_daily_transactions AS (
     FROM customer_scaffold AS scf
     LEFT JOIN all_daily_transactions AS trn ON scf.email = trn.email
         AND scf.request_id = trn.request_id
+        AND scf.date = trn.date
     GROUP BY ALL
 )
 
@@ -80,6 +81,7 @@ WITH all_daily_transactions AS (
         email,
         request_id,
         date,
+        average_balance,
         
         -- Fill forward the last known balance for days without transactions
         LAST_VALUE(average_balance IGNORE NULLS) OVER(
