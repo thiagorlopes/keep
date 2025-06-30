@@ -26,7 +26,7 @@ WITH all_daily_transactions AS (
 
 ,dim_calendar AS (
     SELECT *
-    FROM main.dim_calendar
+    FROM {{ ref('dim_calendar') }}
 )
 
 ,customer_date_range AS (
@@ -72,7 +72,6 @@ WITH all_daily_transactions AS (
     FROM customer_scaffold AS scf
     LEFT JOIN all_daily_transactions AS trn ON scf.email = trn.email
         AND scf.request_id = trn.request_id
-        AND scf.date = trn.date
     GROUP BY ALL
 )
 
@@ -99,7 +98,7 @@ WITH all_daily_transactions AS (
         
         -- Sum of all deposits for the day. This is the "Day Rev" from the sheet.
         SUM(deposits) OVER(PARTITION BY email, request_id, DAYOFYEAR(date)) AS daily_revenue,
-    FROM all_daily_transactions
+    FROM all_daily_transactions AS trn
     WHERE is_revenue
     QUALIFY ROW_NUMBER() OVER(PARTITION BY email, request_id, date) = 1
 )
@@ -129,17 +128,17 @@ WITH all_daily_transactions AS (
         wrv.weekly_revenue,
         
         -- Include auxiliary date columns for reference
-        cdr.*
+        ANY_VALUE(cdr.most_recent_statement_date) OVER (PARTITION BY db.email, db.request_id) AS most_recent_statement_date,
+        ANY_VALUE(cdr.most_recent_statement_date_minus_30_days) OVER (PARTITION BY db.email, db.request_id) AS most_recent_statement_date_minus_30_days,
+        ANY_VALUE(cdr.most_recent_statement_date_minus_60_days) OVER (PARTITION BY db.email, db.request_id) AS most_recent_statement_date_minus_60_days,
+        ANY_VALUE(cdr.most_recent_statement_date_minus_90_days) OVER (PARTITION BY db.email, db.request_id) AS most_recent_statement_date_minus_90_days,
+        ANY_VALUE(cdr.most_recent_statement_date_minus_180_days) OVER (PARTITION BY db.email, db.request_id) AS most_recent_statement_date_minus_180_days,
+        ANY_VALUE(cdr.most_recent_statement_date_minus_365_days) OVER (PARTITION BY db.email, db.request_id) AS most_recent_statement_date_minus_365_days
+
     FROM daily_balances AS db
-    LEFT JOIN daily_revenue AS drv ON db.email = drv.email
-        AND db.request_id = drv.request_id
-        AND db.date = drv.date
-    LEFT JOIN weekly_revenue AS wrv ON db.email = wrv.email
-        AND db.request_id = wrv.request_id
-        AND db.date = wrv.date
-    LEFT JOIN customer_date_range AS cdr ON db.email = cdr.email
-        AND db.request_id = cdr.request_id
-        AND db.date = cdr.date
+    LEFT JOIN daily_revenue AS drv USING(email, request_id, date)
+    LEFT JOIN weekly_revenue AS wrv USING(email, request_id, date)
+    LEFT JOIN customer_date_range AS cdr USING(email, request_id, date)
 )
 
 SELECT *
