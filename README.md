@@ -71,7 +71,7 @@ For hands-on, ad-hoc analysis, you can use the provided JupyterLab environment t
 
 <img width="1250" alt="image" src="https://github.com/user-attachments/assets/8868ac45-b3d6-4393-acff-bf0e1a26a393" />
 
-**Example:** To query the daily transactions table, you can access the notebook [analytics/analytics_development.ipynb](http://localhost:8888/lab/tree/analytics/analytics_development.ipynb). Next you can visualize a model by inputting their name in the input box and clicking on `Load Model`. Also, you can query data from the dbt model in the following manner:
+**Example:** To query the daily transactions table, you can access the notebook [analytics/analytics_development.ipynb](http://localhost:8888/lab/tree/analytics/analytics_development.ipynb). Next you can visualize by inputting the string "fct_daily_transactions_by_customer" in the input box and clicking on `Load Model`. Also, you can query data from the dbt model in the following manner:
 
 ```sql
 SELECT * FROM main.fct_daily_transactions_by_customer
