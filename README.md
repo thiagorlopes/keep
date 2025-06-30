@@ -71,7 +71,7 @@ For hands-on, ad-hoc analysis, you can use the provided JupyterLab environment t
 
 <img width="800" alt="image" src="https://github.com/user-attachments/assets/8256630b-b6fb-4c9d-ae83-d51ed8ff0b5c" />
 
-**Example:** To query the final daily metrics table, you can access the notebook [analytics/analytics_development.ipynb](http://localhost:8888/lab/tree/analytics/analytics_development.ipynb). You should always run the first cell, which defines the method `run_query`. After that, you can query data from the dbt model in the following manner:
+**Example:** To query the daily transactions table, you can access the notebook [analytics/analytics_development.ipynb](http://localhost:8888/lab/tree/analytics/analytics_development.ipynb). You should always run the first cell, which defines the method `run_query`. After that, you can query data from the dbt model in the following manner:
 
 ```python
 result_dataframe = run_query("SELECT * FROM main.fct_daily_transactions_by_customer")
