@@ -56,7 +56,7 @@ The dbt docs provide an interactive dependency graph and a full data dictionary,
 For hands-on, ad-hoc analysis, you can use the provided JupyterLab environment to write your own SQL queries against the generated data.
 *   **Link:** [http://localhost:8888](http://localhost:8888)
 
-**Example:** To query the final daily metrics table, you can access the notebook `analytics/analytics_development.ipynb`, run the first cell and use the following command in a new cell:
+**Example:** To query the final daily metrics table, you can access the notebook [analytics/analytics_development.ipynb](http://localhost:8888/lab/tree/analytics/analytics_development.ipynb), run the first cell and use the following command in a new cell:
 ```python
 result_dataframe = run_query("SELECT * FROM main.fct_daily_transactions_by_customer")
 result_dataframe.head()
