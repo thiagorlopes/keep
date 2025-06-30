@@ -69,14 +69,12 @@ It also provides a [full data dictionary](http://localhost:8081/#!/model/model.c
 For hands-on, ad-hoc analysis, you can use the provided JupyterLab environment to write your own SQL queries against the generated data.
 *   **Link:** [http://localhost:8888](http://localhost:8888)
 
-<img width="800" alt="image" src="https://github.com/user-attachments/assets/8256630b-b6fb-4c9d-ae83-d51ed8ff0b5c" />
+<img width="1250" alt="image" src="https://github.com/user-attachments/assets/8868ac45-b3d6-4393-acff-bf0e1a26a393" />
 
+**Example:** To query the daily transactions table, you can access the notebook [analytics/analytics_development.ipynb](http://localhost:8888/lab/tree/analytics/analytics_development.ipynb). Next you can visualize a model by inputting their name in the input box and clicking on `Load Model`. Also, you can query data from the dbt model in the following manner:
 
-**Example:** To query the daily transactions table, you can access the notebook [analytics/analytics_development.ipynb](http://localhost:8888/lab/tree/analytics/analytics_development.ipynb). You should always run the first cell, which defines the method `run_query`. After that, you can query data from the dbt model in the following manner:
-
-```python
-result_dataframe = run_query("SELECT * FROM main.fct_daily_transactions_by_customer")
-result_dataframe.head()
+```sql
+SELECT * FROM main.fct_daily_transactions_by_customer
 ```
 
 Remember that, in dbt, you reference an input model as {{ ref('model_name') }}, while, in the notebook, you should use main.model_name.
