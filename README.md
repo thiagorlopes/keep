@@ -39,7 +39,7 @@ This workflow is for analyzing statements that you have saved on your computer.
 
 #### Option B: Automated API Run
 This workflow is for analyzing a customer's data by pulling it directly from the mocked Flinks system.
-1.  Using the sidebar, navigate to the **"Automated API Run"** page.
+1.  Using the sidebar, navigate to the [Automated API Run](http://localhost:8501/Automated_API_Run) page.
 2.  Enter the customer's email address and click **"Ingest from Mock API and Run Analysis"**.
 3.  The system will fetch the data, process it, and display a summary.
 
