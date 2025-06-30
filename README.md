@@ -23,18 +23,25 @@ The process for an analyst is straightforward: first, you run the main pipeline 
 
 ### Step 1: Running the Analysis Pipeline
 There are two ways to run the pipeline, both available in the main **Analyst UI**:
+
 **Link:** [http://localhost:8501](http://localhost:8501)
+
+<img width="800" alt="image" src="https://github.com/user-attachments/assets/423fbfb3-1d92-4efb-bdb7-e06cd3703808" />
 
 #### Option A: Manual CSV Upload
 This workflow is for analyzing statements that you have saved on your computer.
 
-1.  **Get Statement Files:** First, you need statement files to analyze. You can get sample files from the included Mock API:
-    *   Navigate to the **Mock API Interface** at [http://localhost:5000](http://localhost:5000).
-    *   Enter a customer email (e.g., `joelschaubel@gmail.com`) and click "Download Statements".
-    *   A `.zip` file containing CSV statements will be downloaded. Unzip this file.
+1.  **Get Statement Files:**
+
+First, you need statement files to analyze. You can get sample files from the included Mock API:
+<img width="800" alt="image" src="https://github.com/user-attachments/assets/f1989932-d172-4ef4-ae08-32bcfbec1a7c" />
+*   Navigate to the **Mock API Interface** at [http://localhost:5000](http://localhost:5000).
+*   Enter a customer email (e.g., `joelschaubel@gmail.com`) and click "Download Statements".
+*   A `.zip` file containing CSV statements will be downloaded. Unzip this file.
+
 2.  **Upload and Run:**
-    *   On the main page of the [Analyst UI](http://localhost:8501), drag and drop the downloaded CSV files into the uploader.
-    *   Click the **"Run Analysis on Uploaded CSVs"** button.
+*   On the main page of the [Analyst UI](http://localhost:8501), drag and drop the downloaded CSV files into the uploader.
+*   Click the **"Run Analysis on Uploaded CSVs"** button.
 3.  **View Results:** The system will process the files and display a summary of the results.
 
 #### Option B: Automated API Run
@@ -50,11 +57,19 @@ After a pipeline run is complete, you can dig deeper into the data and the busin
 First, to understand what tables were created, what each column means, and to see the business logic, use the live data documentation.
 *   **Link:** [http://localhost:8081](http://localhost:8081)
 
-The dbt docs provide an interactive dependency graph and a full data dictionary, making it easy to understand how the metrics are calculated.
+The dbt docs provide an interactive dependency graph, so you can check the relationship between the models:
+
+<img width="800" alt="image" src="https://github.com/user-attachments/assets/ccf9b7e9-69f5-404b-b384-9010076b921a" />
+
+It also provides a [full data dictionary](http://localhost:8081/#!/model/model.customer_transactions.all_transactions_by_customer), making it easy to understand how the metrics are calculated.
+
+<img width="800" alt="image" src="https://github.com/user-attachments/assets/ea757dc3-300e-4a2a-a27f-cf34c85a0465" />
 
 #### Querying the Data: JupyterLab
 For hands-on, ad-hoc analysis, you can use the provided JupyterLab environment to write your own SQL queries against the generated data.
 *   **Link:** [http://localhost:8888](http://localhost:8888)
+
+<img width="800" alt="image" src="https://github.com/user-attachments/assets/8256630b-b6fb-4c9d-ae83-d51ed8ff0b5c" />
 
 **Example:** To query the final daily metrics table, you can access the notebook [analytics/analytics_development.ipynb](http://localhost:8888/lab/tree/analytics/analytics_development.ipynb). You should always run the first cell, which defines the method `run_query`. After that, you can query data from the dbt model in the following manner:
 
