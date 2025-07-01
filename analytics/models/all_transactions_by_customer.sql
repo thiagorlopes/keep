@@ -29,6 +29,7 @@ WITH transactions_with_latest_date AS (
         account_name,
         account_number,
         account_type,
+        'more than 5 years' AS years_in_business,
         
         -- Safe casting to handle empty strings using the duckdb if() function
         IF(account_balance = '', NULL, CAST(account_balance AS DOUBLE)) AS account_balance,

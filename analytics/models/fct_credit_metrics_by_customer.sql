@@ -3,9 +3,10 @@
 WITH daily_aggregates AS (
     -- First, aggregate the raw transactions to a daily level.
     SELECT
-        request_id,
-        email,
-        date,
+        trn.request_id,
+        trn.email,
+        trn.date,
+        trn.years_in_business,
         -- Use the date calculation columns from the source table
         most_recent_statement_date,
         MIN(date) AS earliest_statement_date,
@@ -13,7 +14,7 @@ WITH daily_aggregates AS (
         most_recent_statement_date_minus_180_days,
         SUM(IF(is_revenue, deposits, 0)) as daily_revenue,
         SUM(IF(is_debit, withdrawals, 0)) as daily_debits,
-    FROM main.all_transactions_by_customer
+    FROM main.all_transactions_by_customer AS trn
     GROUP BY ALL
 )
 
@@ -40,8 +41,26 @@ WITH daily_aggregates AS (
     SELECT
         request_id,
         email,
-        ROUND(SUM(daily_revenue) / (DATEDIFF(DAY, MAX(date), MIN(date)) + 1), 2) AS average_daily_revenue
+        ROUND(SUM(daily_revenue) / (DATEDIFF('day', MIN(date), MAX(date)) + 1), 2) AS average_daily_revenue
     FROM daily_aggregates
+    GROUP BY 1,2
+)
+
+,weekly_revenues_deduplicated AS (
+    SELECT DISTINCT
+        request_id,
+        email,
+        weekly_revenue
+    FROM main.fct_daily_transactions_by_customer
+    WHERE weekly_revenue IS NOT NULL
+)
+
+,weekly_revenues AS (
+    SELECT
+        request_id,
+        email,
+        ROUND(AVG(weekly_revenue), 2) AS average_weekly_revenue
+    FROM weekly_revenues_deduplicated
     GROUP BY 1,2
 )
 
@@ -49,7 +68,7 @@ WITH daily_aggregates AS (
     SELECT
         request_id,
         email,
-        ROUND(SUM(daily_debits) / (DATEDIFF(DAY, MAX(date), MIN(date)) + 1), 2) AS average_daily_expenses
+        ROUND(SUM(daily_debits) / (DATEDIFF('day', MIN(date), MAX(date)) + 1), 2) AS average_daily_expenses
     FROM daily_aggregates
     GROUP BY 1,2
 )
@@ -58,6 +77,7 @@ WITH daily_aggregates AS (
 SELECT
     dag.request_id,
     dag.email,
+    dag.years_in_business,
 
     -- Revenue Metrics
     SUM(dag.daily_revenue) AS revenue_total_credit,
@@ -76,17 +96,20 @@ SELECT
     0 AS credit_card_91_to_180_days,
 
     -- Averages and Balances
-    db.average_daily_balance AS average_daily_balance_across_bank_accounts,
-    mrb.most_recent_balance AS most_recent_balance_across_bank_accounts,
+    MAX(db.average_daily_balance) AS average_daily_balance_across_bank_accounts,
+    MAX(mrb.most_recent_balance) AS most_recent_balance_across_bank_accounts,
 
     -- Calculations
     SUM(dag.daily_revenue) * 2 AS estimated_annual_revenue,
-    db.average_daily_balance,
-    drv.average_daily_revenue,
-    IF(SUM(dag.daily_revenue) * 2 > mrb.most_recent_balance, SUM(dag.daily_revenue) * 2, mrb.most_recent_balance) AS smart_revenue
+    MAX(db.average_daily_balance) as average_daily_balance,
+    MAX(drv.average_daily_revenue) as average_daily_revenue,
+    IF(SUM(dag.daily_revenue) * 2 > MAX(mrb.most_recent_balance), SUM(dag.daily_revenue) * 2, MAX(mrb.most_recent_balance)) AS smart_revenue,
+    0 AS existing_debt_payments_consideration,
+    MAX(wrv.average_weekly_revenue) AS average_weekly_revenue
 
 FROM daily_aggregates AS dag
 LEFT JOIN daily_balances AS db USING(request_id, email)
 LEFT JOIN most_recent_balances AS mrb USING(request_id, email)
 LEFT JOIN daily_revenues AS drv USING(request_id, email)
+LEFT JOIN weekly_revenues AS wrv USING(request_id, email)
 GROUP BY ALL
