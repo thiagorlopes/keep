@@ -33,6 +33,8 @@ services:
       - ./data_lake:/app/data_lake
     depends_on:
       - api
+    env_file:
+      - .env
     environment:
       # This ensures dbt in the container writes to the host filesystem via the volume mount
       - PWD=/app
