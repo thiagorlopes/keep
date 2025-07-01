@@ -72,6 +72,7 @@ WITH all_daily_transactions AS (
     FROM customer_scaffold AS scf
     LEFT JOIN all_daily_transactions AS trn ON scf.email = trn.email
         AND scf.request_id = trn.request_id
+        AND scf.date = trn.date
     GROUP BY ALL
 )
 

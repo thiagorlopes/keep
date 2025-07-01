@@ -19,12 +19,17 @@ WITH daily_aggregates AS (
     GROUP BY ALL
 )
 
-,daily_balances AS (
+,average_daily_balance_180d AS (
     SELECT
         request_id,
         email,
+<<<<<<< Updated upstream
         ROUND(AVG(revised_average_balance), 2) AS revised_average_balance
+=======
+        ROUND(AVG(revised_average_balance), 2) AS average_daily_balance_180d
+>>>>>>> Stashed changes
     FROM main.fct_daily_transactions_by_customer
+    WHERE date > most_recent_statement_date_minus_180_days
     GROUP BY ALL
 )
 
@@ -33,7 +38,7 @@ WITH daily_aggregates AS (
         request_id,
         email,
         balance AS most_recent_balance
-    FROM main. all_transactions_by_customer
+    FROM main.all_transactions_by_customer
     QUALIFY ROW_NUMBER() OVER(PARTITION BY request_id, email ORDER BY date DESC) = 1
 )
 
@@ -46,6 +51,7 @@ WITH daily_aggregates AS (
     GROUP BY 1,2
 )
 
+<<<<<<< Updated upstream
 ,weekly_revenues_deduplicated AS (
     SELECT
         request_id,
@@ -59,13 +65,29 @@ WITH daily_aggregates AS (
 
 )
 
+=======
+>>>>>>> Stashed changes
 ,weekly_revenues AS (
     SELECT
         request_id,
         email,
+<<<<<<< Updated upstream
         AVG(weekly_revenue) AS average_weekly_revenue
     FROM weekly_revenues_deduplicated
     GROUP BY 1,2
+=======
+        ROUND(AVG(weekly_revenue), 2) AS average_weekly_revenue
+    FROM (
+        SELECT DISTINCT
+            request_id,
+            email,
+            WEEKOFYEAR(date) AS week_of_year,
+            weekly_revenue
+        FROM main.fct_daily_transactions_by_customer
+        WHERE weekly_revenue IS NOT NULL
+    ) AS deduped_weekly_revenues
+    GROUP BY 1, 2
+>>>>>>> Stashed changes
 )
 
 ,daily_expenses AS (
@@ -98,19 +120,32 @@ SELECT
     0 AS credit_card_91_to_180_days,
 
     -- Averages and Balances
+<<<<<<< Updated upstream
     revised_average_balance AS average_daily_balance_across_bank_accounts,
     most_recent_balance AS most_recent_balance_across_bank_accounts,
 
     -- Calculations
     SUM(dag.daily_revenue) * 2 AS estimated_annual_revenue,
     MAX(db.revised_average_balance) as average_daily_balance,
+=======
+    adb.average_daily_balance_180d AS average_daily_balance_across_bank_accounts,
+    mrb.most_recent_balance AS most_recent_balance_across_bank_accounts,
+
+    -- Calculations
+    SUM(dag.daily_revenue) * 2 AS estimated_annual_revenue,
+    MAX(adb.average_daily_balance_180d) as average_daily_balance,
+>>>>>>> Stashed changes
     MAX(drv.average_daily_revenue) as average_daily_revenue,
     MAX(dxp.average_daily_expense) as average_daily_expense,
     IF(SUM(dag.daily_revenue) * 2 > MAX(mrb.most_recent_balance), SUM(dag.daily_revenue) * 2, MAX(mrb.most_recent_balance)) AS smart_revenue,
     0 AS existing_debt_payments_consideration,
     MAX(wrv.average_weekly_revenue) AS average_weekly_revenue
 FROM daily_aggregates AS dag
+<<<<<<< Updated upstream
 LEFT JOIN daily_balances AS db USING(request_id, email)
+=======
+LEFT JOIN average_daily_balance_180d AS adb USING(request_id, email)
+>>>>>>> Stashed changes
 LEFT JOIN most_recent_balances AS mrb USING(request_id, email)
 LEFT JOIN daily_revenues AS drv USING(request_id, email)
 LEFT JOIN weekly_revenues AS wrv USING(request_id, email)
