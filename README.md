@@ -125,7 +125,7 @@ After the automated business decision in Taktile, the results will be rendered i
 
 <img width="1423" alt="image" src="https://github.com/user-attachments/assets/5642fbf3-3e1d-4de0-98d0-63bb549ee8ce" />
 
-This demonstrates the end-to-end value of the data pipeline: raw data is ingested, transformed into meaningful metrics, and then used to power a real-time, automated business decision.
+This final information can be used internally at Keep for approving the limit for the customer.
 
 ### List of Resources
 *   **Mock API Interface:** [http://localhost:5000](http://localhost:5000)
