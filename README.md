@@ -108,6 +108,11 @@ Remember that, in dbt, you reference an input model as {{ ref('model_name') }}, 
 The final step of the workflow is to take the calculated credit metrics and use them to make an underwriting decision. This project uses [Taktile](https://app.taktile.com/decide/org/976b336b-e6b4-4904-8e20-1e27c33dc099/ws/3bba1a21-aaa5-457b-af1b-422404e0e960/flows?folder-id=8f6e925b-ea9e-46e4-a30a-953c4c418d9d), a modern decisioning platform, to model the decision flow.
 
 After a pipeline run is complete, the Analyst UI will display the final `fct_credit_metrics_by_customer` table. 
+
+<img width="1440" alt="image" src="https://github.com/user-attachments/assets/e94ed16e-f1aa-4bac-8bd2-b6a4dcd7b762" />
+
+The next steps then are:
+
 1.  Review the calculated metrics in the UI.
 2.  Click the **"Send to Taktile"** button.
 3.  The application will send the metrics to the Taktile API and display the full decision response, including the final approval amount and risk analysis.
