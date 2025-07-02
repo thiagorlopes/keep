@@ -84,7 +84,7 @@ First, to understand what tables were created, what each column means, and to se
 
 The dbt docs provide an interactive dependency graph, so you can check the relationship between the models:
 
-<img width="800" alt="image" src="https://github.com/user-attachments/assets/ccf9b7e9-69f5-404b-b384-9010076b921a" />
+![image](https://github.com/user-attachments/assets/a21e5a9a-9f54-4c86-9354-d46de09fc657)
 
 It also provides a [full data dictionary](http://localhost:8081/#!/model/model.customer_transactions.all_transactions_by_customer), making it easy to understand how the metrics are calculated.
 
