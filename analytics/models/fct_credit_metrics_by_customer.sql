@@ -15,7 +15,7 @@ WITH daily_aggregates AS (
         most_recent_statement_date_minus_365_days,
         SUM(IF(is_revenue, deposits, 0)) as daily_revenue,
         SUM(IF(is_debit, withdrawals, 0)) as daily_debits
-    FROM main.all_transactions_by_customer
+    FROM {{ ref('int_transactions_enriched') }}
     GROUP BY ALL
 )
 
@@ -24,7 +24,7 @@ WITH daily_aggregates AS (
         request_id,
         email,
         ROUND(AVG(revised_average_balance), 2) AS average_daily_balance_180d
-    FROM main.fct_daily_transactions_by_customer
+    FROM {{ ref('fct_daily_transactions_by_customer') }}
     WHERE date > most_recent_statement_date_minus_180_days
     GROUP BY ALL
 )
@@ -34,7 +34,7 @@ WITH daily_aggregates AS (
         request_id,
         email,
         balance AS most_recent_balance
-    FROM main.all_transactions_by_customer
+    FROM {{ ref('int_transactions_enriched') }}
     QUALIFY ROW_NUMBER() OVER(PARTITION BY request_id, email ORDER BY date DESC) = 1
 )
 
@@ -58,7 +58,7 @@ WITH daily_aggregates AS (
             email,
             WEEKOFYEAR(date) AS week_of_year,
             weekly_revenue
-        FROM main.fct_daily_transactions_by_customer
+        FROM {{ ref('fct_daily_transactions_by_customer') }}
         WHERE weekly_revenue IS NOT NULL
     ) AS deduped_weekly_revenues
     GROUP BY 1, 2

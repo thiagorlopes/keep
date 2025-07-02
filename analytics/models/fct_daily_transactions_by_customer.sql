@@ -3,7 +3,7 @@
 -- This model creates a complete, daily time series for each customer over the
 -- last 180 days, filling in any missing dates with the last known balance.
 
-WITH all_daily_transactions AS (
+WITH int_transactions_enriched AS (
     SELECT
         username,
         email,
@@ -21,7 +21,7 @@ WITH all_daily_transactions AS (
         most_recent_statement_date_minus_90_days,
         most_recent_statement_date_minus_180_days,
         most_recent_statement_date_minus_365_days
-    FROM {{ ref('all_transactions_by_customer') }}
+    FROM {{ ref('int_transactions_enriched') }}
 )
 
 ,dim_calendar AS (
@@ -46,7 +46,7 @@ WITH all_daily_transactions AS (
         most_recent_statement_date_minus_90_days,
         most_recent_statement_date_minus_180_days,
         most_recent_statement_date_minus_365_days
-    FROM all_daily_transactions
+    FROM int_transactions_enriched
     GROUP BY ALL
 )
 
@@ -70,7 +70,7 @@ WITH all_daily_transactions AS (
         -- Average balance for days with multiple transactions
         AVG(trn.balance) AS average_balance
     FROM customer_scaffold AS scf
-    LEFT JOIN all_daily_transactions AS trn ON scf.email = trn.email
+    LEFT JOIN int_transactions_enriched AS trn ON scf.email = trn.email
         AND scf.request_id = trn.request_id
         AND scf.date = trn.date
     GROUP BY ALL
@@ -99,7 +99,7 @@ WITH all_daily_transactions AS (
         
         -- Sum of all deposits for the day. This is the "Day Rev" from the sheet.
         SUM(deposits) OVER(PARTITION BY email, request_id, DAYOFYEAR(date)) AS daily_revenue,
-    FROM all_daily_transactions AS trn
+    FROM int_transactions_enriched AS trn
     WHERE is_revenue
     QUALIFY ROW_NUMBER() OVER(PARTITION BY email, request_id, date) = 1
 )
@@ -112,7 +112,7 @@ WITH all_daily_transactions AS (
         
         -- Sum of all deposits for the day. This is the "Weekly revenue" from the sheet.
         SUM(deposits) OVER(PARTITION BY email, request_id, WEEKOFYEAR(date)) AS weekly_revenue,
-    FROM all_daily_transactions
+    FROM int_transactions_enriched
     WHERE is_revenue
     QUALIFY ROW_NUMBER() OVER(PARTITION BY email, request_id, date) = 1
 )

@@ -9,7 +9,7 @@ WITH transactions_with_latest_date AS (
         *,
         -- Cast the date column to TIMESTAMP to ensure correct date arithmetic
         MAX(CAST(date AS TIMESTAMP)) OVER(PARTITION BY login_id) as most_recent_statement_date
-    FROM {{ ref('statements') }}
+    FROM {{ ref('stg_transactions') }}
 )
 
 ,enriched_transactions AS (
