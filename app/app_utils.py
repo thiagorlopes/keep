@@ -169,8 +169,6 @@ def _call_taktile_api(payload: dict, logger: logging.Logger) -> dict:
 
     decide_url = f"{TAKTILE_BASE_URL}/run/api/v1/flows/underwriting/sandbox/decide"
     logger.info(f"Posting payload to Taktile: {decide_url}")
-    logger.info(f"Using API key: {TAKTILE_API_KEY[:10]}...{TAKTILE_API_KEY[-4:] if TAKTILE_API_KEY and len(TAKTILE_API_KEY) > 14 else 'INVALID'}")
-    logger.info(f"Request headers: {headers}")
     response = requests.post(decide_url, headers=headers, json=serializable_payload, timeout=30)
 
     # Log the response details for debugging
