@@ -22,15 +22,10 @@ Create a file named `.env` and add the following content:
 # You can generate a new one with: openssl rand -hex 32
 API_MOCK_SECRET_KEY=a_very_secret_key_that_should_be_changed
 
-# The root directory for the data lake.
-# This should be the absolute path to the data_lake directory in the project.
-DATA_LAKE_ROOT=.
-
 # Your API key for the Taktile demo service.
 TAKTILE_DEMO_API_KEY=your_taktile_api_key_here
 
 # The base URL for the Taktile API.
-# The default value is provided here.
 TAKTILE_BASE_URL=https://eu-central-1.taktile-demo.decide.taktile.com
 ```
 
