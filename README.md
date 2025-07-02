@@ -88,7 +88,7 @@ The dbt docs provide an interactive dependency graph, so you can check the relat
 
 It also provides a [full data dictionary](http://localhost:8081/#!/model/model.customer_transactions.all_transactions_by_customer), making it easy to understand how the metrics are calculated.
 
-<img width="800" alt="image" src="https://github.com/user-attachments/assets/ea757dc3-300e-4a2a-a27f-cf34c85a0465" />
+<img width="800" alt="image" src="https://github.com/user-attachments/assets/dd6e0cc0-4bbe-4b70-b137-5c522a2f7cb1" />
 
 #### Querying the Data: JupyterLab
 For hands-on, ad-hoc analysis, you can use the provided JupyterLab environment to write your own SQL queries against the generated data.
