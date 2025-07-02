@@ -149,3 +149,49 @@ models:
       - name: most_recent_statement_date_minus_365_days
         description: "A calculated date marker for 365 days prior to the 'most_recent_statement_date'. e.g., '2023-02-09'."
 
+  - name: fct_credit_metrics_by_customer
+    description: "This is the final analytical model that aggregates all transaction data for a customer into a single row of key credit and revenue metrics. It serves as the primary source for the underwriting analysis and the data sent to the Taktile API. Each row represents a complete financial profile for a single data request."
+    columns:
+      - name: request_id
+        description: "The unique identifier for the entire data retrieval process or job."
+      - name: email
+        description: "The customer's email address."
+      - name: revenue_total_credit
+        description: "Business Rule: The total sum of all deposits (revenue) across the entire statement period. Formula: Total of all daily revenues. e.g., 252376.47"
+      - name: revenue_total
+        description: "Business Rule: An alias for 'revenue_total_credit'. Formula: Total of all daily revenues. e.g., 252376.47"
+      - name: revenue_recent_90_days
+        description: "Business Rule: The sum of all revenue within the last 90 days from the most recent statement date. Formula: Total revenue from the last 90 days. e.g., 57546.62"
+      - name: revenue_91_to_180_days
+        description: "Business Rule: The sum of all revenue in the period from 180 to 91 days prior to the most recent statement date. Formula: Total revenue between 91 and 180 days ago. e.g., 65181.75"
+      - name: debits_total
+        description: "Business Rule: The total sum of all withdrawals (debits) across the entire statement period. Formula: Total of all daily debits. e.g., 265788.41"
+      - name: debits_recent_90_days
+        description: "Business Rule: The sum of all debits within the last 90 days from the most recent statement date. Formula: Total debits from the last 90 days. e.g., 58856.54"
+      - name: debits_91_to_180_days
+        description: "Business Rule: The sum of all debits in the period from 180 to 91 days prior to the most recent statement date. Formula: Total debits between 91 and 180 days ago. e.g., 69278.0"
+      - name: credit_card_payments
+        description: "Placeholder field for credit card payment metrics. Currently hardcoded to 0."
+      - name: credit_card_recent_90_days
+        description: "Placeholder field for recent credit card payment metrics. Currently hardcoded to 0."
+      - name: credit_card_91_to_180_days
+        description: "Placeholder field for older credit card payment metrics. Currently hardcoded to 0."
+      - name: average_daily_balance_across_bank_accounts
+        description: "Business Rule: The average of the 'revised_average_balance' from the daily time series over the last 180 days. Formula: Average of daily balances for the last 180 days. e.g., 3633.73"
+      - name: most_recent_balance_across_bank_accounts
+        description: "Business Rule: The very last known balance from the most recent transaction in the statement period. Formula: Balance of the most recent transaction. e.g., 418.52"
+      - name: estimated_annual_revenue
+        description: "Business Rule: A simple estimation of annual revenue. Formula: Total Revenue * 2. e.g., 504752.94"
+      - name: average_daily_balance
+        description: "Business Rule: An alias for 'average_daily_balance_across_bank_accounts'. Formula: Average of daily balances for the last 180 days. e.g., 3633.73"
+      - name: average_daily_revenue
+        description: "Business Rule: The average daily revenue across the entire statement period. Formula: Total Revenue / Number of Days. e.g., 697.17"
+      - name: average_daily_expense
+        description: "Business Rule: The average daily expense across the entire statement period. Formula: Total Debits / Number of Days. e.g., 734.22"
+      - name: smart_revenue
+        description: "Business Rule: A calculated field that takes the higher value between the 'estimated_annual_revenue' and the 'most_recent_balance'. Formula: The greater of Estimated Annual Revenue or Most Recent Balance. e.g., 504752.94"
+      - name: existing_debt_payments_consideration
+        description: "Placeholder field for considering existing debt payments. Currently hardcoded to 0."
+      - name: average_weekly_revenue
+        description: "Business Rule: The average of the distinct weekly revenue values calculated in the daily time series model. Formula: Average of all weekly revenue totals. e.g., 4853.39"
+
