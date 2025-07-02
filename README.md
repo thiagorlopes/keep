@@ -117,6 +117,8 @@ The next steps then are:
 2.  Click the **"Send to Taktile"** button.
 3.  The application will send the metrics to the Taktile API and display the full decision response, including the final approval amount and risk analysis.
 
+The picture below shows part of the decision flow in Taktile.
+
 ![image](https://github.com/user-attachments/assets/fe9e8f77-1a32-4e93-95f6-6cbd08a45a5b)
 
 This demonstrates the end-to-end value of the data pipeline: raw data is ingested, transformed into meaningful metrics, and then used to power a real-time, automated business decision.
