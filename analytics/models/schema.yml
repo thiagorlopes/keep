@@ -1,6 +1,62 @@
 version: 2
 
 models:
+  - name: statements
+    description: "This model is the entry point for raw transaction data into the dbt project. It directly reads the 'silver' layer of the data lake, which contains the combined, cleansed, and deduplicated transaction data from all source bank statements. The data is loaded from the Silver Delta table using DuckDB's `delta_scan()` function, which efficiently reads the latest version of the data directly from the Delta Lake transaction log. This process is orchestrated by the `transform_statements.py` pipeline, which reads from the Bronze layer, cleans the data, and merges it into the Silver table, ensuring data integrity and idempotency. This model serves as the foundational source table for all downstream analysis and financial metric calculations."
+    columns:
+      - name: account_balance
+        description: "The total balance of the bank account at the moment the data was fetched from the source. e.g., 418.52"
+      - name: account_name
+        description: "The specific name of the bank account as provided by the financial institution. e.g., 'No Fee Chequing Account'."
+      - name: account_number
+        description: "The unique identifier for the bank account. This is a critical field for joining data and identifying unique accounts. e.g., '010-30800-0095983938'."
+      - name: account_type
+        description: "A high-level classification of the bank account. e.g., 'Operation'."
+      - name: address
+        description: "The physical address of the account holder. e.g., '36 HOLKHAM AVE, ANCASTER, ON, L9K1P1'."
+      - name: amount
+        description: "A calculated field representing the value of the transaction. It is positive for credits/deposits and negative for debits/withdrawals. This normalizes the 'deposits' and 'withdrawals' columns into a single, consistent field."
+      - name: balance
+        description: "The running balance of the account *after* the transaction occurred, as it appears on the statement. e.g., '418.52'."
+      - name: category
+        description: "A high-level category assigned to the transaction, typically indicating the direction of money flow. e.g., 'debit'."
+      - name: date
+        description: "The date on which the transaction was processed by the bank. e.g., '2024-02-09'."
+      - name: days_detected
+        description: "A field from the source system, potentially used to indicate the age or detection date of the transaction. (Often requires more context from the source API documentation)."
+      - name: deposits
+        description: "The original, raw value of a deposit from the source data. This field is kept for auditing and data lineage purposes. It is mutually exclusive with 'withdrawals'."
+      - name: description
+        description: "The raw, unprocessed transaction description from the bank statement. This is a key field for transaction categorization. e.g., 'MISCELLANEOUS PAYMENTS NEWFOUNDLAND POWER INC.'."
+      - name: email
+        description: "The email address of the account holder. It's important to note this may arrive in uppercase and should be normalized for consistency. e.g., 'JOELSCHAUBEL@GMAIL.COM'."
+      - name: employer_name
+        description: "The name of the account holder's employer, if available in the source data."
+      - name: financial_institution
+        description: "The name of the bank or financial institution where the account is held. e.g., 'Simplii'."
+      - name: login_id
+        description: "A unique identifier for the authentication session with the source API (Flinks mock). e.g., '5eff116b-d0d9-4924-4b37-08dc29c779f9'."
+      - name: request_date_time
+        description: "The specific timestamp when the data request was made to the source API. e.g., '2024-02-11 19:26:39'."
+      - name: request_id
+        description: "The unique identifier for the entire data retrieval process or job. This is crucial for tracking data lineage. e.g., '727DAE61-63E9-4121-801E-F11CA8FF32FD'."
+        tests:
+          - not_null
+      - name: request_status
+        description: "The final status of the data request from the source API. e.g., 'Get Statements Completed'."
+      - name: subcategory
+        description: "A more granular category for the transaction, if available."
+      - name: tag
+        description: "A flexible metadata field containing various key-value pairs related to the request context from the source system. e.g., 'email=...,businessId=...,userId=...'."
+      - name: type
+        description: "The type of transaction (e.g., 'credit', 'debit'). This column often duplicates information found in the 'category' field and may require consolidation in downstream models."
+      - name: username
+        description: "The full name of the account holder. e.g., 'Joel Schaubel'."
+      - name: withdrawals
+        description: "The original, raw value of a withdrawal from the source data. This field is kept for auditing and is mutually exclusive with 'deposits'."
+      - name: account_id
+        description: "An internal identifier assigned to the account, used for joining and tracking within the data warehouse. This may differ from the public-facing 'account_number'."
+
   - name: all_transactions_by_customer
     description: "This model is the foundational table for all customer transactions. It combines raw transaction data from all statements, cleanses data types, and enriches each transaction with key metadata, such as boolean flags for revenue/debits and a series of calculated date columns for time-based analysis. This table serves as the primary source for all downstream financial metrics. This table is built from a UNION ALL of all statements for a given customer. For that reason, the balance column is not a running balance, but rather the balance of the account at the time of the transaction and should be normalized."
     columns:

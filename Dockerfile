@@ -42,7 +42,7 @@ WORKDIR /app/analytics
 
 # Serve the generated documentation on port 8081
 EXPOSE 8081
-CMD ["python", "-m", "http.server", "8081", "--directory", "./target"]
+CMD ["/bin/bash", "-c", "dbt run && dbt docs generate && python -m http.server 8081 --directory ./target"]
 
 
 # ===== Jupyter Stage =====
