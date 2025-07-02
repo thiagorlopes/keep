@@ -1,7 +1,5 @@
 {{ config(materialized='table') }}
 
-
-
 WITH daily_aggregates AS (
     -- First, aggregate the raw transactions to a daily level.
     SELECT
