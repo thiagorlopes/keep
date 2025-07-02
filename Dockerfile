@@ -10,7 +10,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # This stage builds the image for the mock API service.
 FROM base as api
 COPY ./api_mock ./api_mock
-COPY config.json .
+COPY ./api_mock/config.json .
 COPY run.py .
 EXPOSE 5000
 CMD ["flask", "run", "--host=0.0.0.0"]
@@ -19,9 +19,14 @@ CMD ["flask", "run", "--host=0.0.0.0"]
 # ===== Underwriter App Stage =====
 # This stage builds the image for the Streamlit application.
 FROM base as underwriter_app
+
+# force un-buffered, UTF-8 output for all Python processes
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONIOENCODING=UTF-8
+
 COPY ./app ./app
 WORKDIR /app
-COPY config.json .
+COPY ./api_mock/config.json .
 COPY ./pipelines ./pipelines
 COPY ./analytics ./analytics
 RUN mkdir -p /app/pipelines/data_lake/bronze && \
