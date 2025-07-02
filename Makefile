@@ -1,7 +1,7 @@
-.PHONY: down start
+.PHONY: stop start
 
-down:
+stop:
 	docker-compose down
 
-start: down
+start: stop
 	docker-compose up --build

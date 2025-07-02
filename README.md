@@ -10,12 +10,42 @@ It replaces the manual [Google Sheet](https://docs.google.com/spreadsheets/d/18a
 *   Docker
 *   `make`
 
+
+### Environment Variables
+
+Before you start the application, you need to create a `.env` file in the root of the project directory. This file will hold the necessary secrets and configuration for the services.
+
+Create a file named `.env` and add the following content:
+
+```
+# A secret key used by Flask to sign session cookies.
+# You can generate a new one with: openssl rand -hex 32
+API_MOCK_SECRET_KEY=a_very_secret_key_that_should_be_changed
+
+# The root directory for the data lake.
+# This should be the absolute path to the data_lake directory in the project.
+DATA_LAKE_ROOT=.
+
+# Your API key for the Taktile demo service.
+TAKTILE_DEMO_API_KEY=your_taktile_api_key_here
+
+# The base URL for the Taktile API.
+# The default value is provided here.
+TAKTILE_BASE_URL=https://eu-central-1.taktile-demo.decide.taktile.com
+```
+
+### Startup
+
 From the root of the project directory, simply run:
 
 ```bash
 make start
 ```
-This single command will start all the necessary services.
+This single command will start all the necessary services. The same command can be used if you wish to restart the services. If you want to stop the application, just run:
+
+```bash
+make stop
+```
 
 ## Analyst Workflows
 

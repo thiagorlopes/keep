@@ -55,7 +55,7 @@ docker build -t flinks-mock-api .
 ```bash
 docker run -d --rm -p 5000:5000 flinks-mock-api
 ```
-The application will be available at `http://127.0.0.1:5000`.
+The application will be available at `http://localhost:5000`.
 
 ### 3. Development with Hot-Reloading (Docker Compose)
 
@@ -91,7 +91,7 @@ pip install -r requirements.txt
 ```bash
 python run.py
 ```
-The application will be available at [http://127.0.0.1:5000](http://127.0.0.1:5000).
+The application will be available at [http://localhost:5000](http://localhost:5000).
 
 ## API Documentation
 
@@ -226,14 +226,13 @@ curl -X POST http://localhost:5000/v3/550e8400-e29b-41d4-a716-446655440000/Banki
   - `LoginId` (required): Login ID from the authorize response
   - `AccountNumber` (required): Account number to retrieve statements for
 
+> **Important:** The request body must contain the `AccountNumber`, not the internal `AccountId`. The API uses the `AccountNumber` to look up the account details. Using `AccountId` will result in a `400 Bad Request` error.
+
 **Example:**
 ```bash
-curl -X POST http://localhost:5000/v3/550e8400-e29b-41d4-a716-446655440000/BankingServices/GetStatements \
+curl -X POST http://localhost:5000/v3/123e4567-e89b-12d3-a456-426614174000/BankingServices/GetStatements \
   -H "Content-Type: application/json" \
-  -d '{
-    "LoginId": "123e4567-e89b-12d3-a456-426614174000",
-    "AccountNumber": "010-30800-0095971396"
-  }'
+  -d '{"LoginId": "abc-123", "AccountNumber": "010-30800-0095971396"}'
 ```
 
 **Response:**
@@ -328,7 +327,7 @@ The mock API includes test data for the following account:
 
 ### Web Interface
 
-Navigate to `http://127.0.0.1:5000` in your web browser.
+Navigate to `http://localhost:5000` in your web browser.
 
 - **Email**: `joelschaubel@gmail.com`
 
