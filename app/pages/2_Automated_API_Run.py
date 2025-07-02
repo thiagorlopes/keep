@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 st.set_page_config(layout="wide", page_title="Automated API Run")
 
-st.title("Track B: Automated API Ingestion (Mock)")
+st.title("Automated API Ingestion")
 st.write("This simulates an automated workflow where data is pulled from a source API.")
 
 # Note: Ensure the mock API server is running.
