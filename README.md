@@ -104,6 +104,18 @@ SELECT * FROM main.fct_daily_transactions_by_customer
 
 Remember that, in dbt, you reference an input model as {{ ref('model_name') }}, while, in the notebook, you should use main.model_name.
 
+### Step 3: Making a Decision with Taktile
+The final step of the workflow is to take the calculated credit metrics and use them to make an underwriting decision. This project uses [Taktile](https://app.taktile.com/decide/org/976b336b-e6b4-4904-8e20-1e27c33dc099/ws/3bba1a21-aaa5-457b-af1b-422404e0e960/flows?folder-id=8f6e925b-ea9e-46e4-a30a-953c4c418d9d), a modern decisioning platform, to model the decision flow.
+
+After a pipeline run is complete, the Analyst UI will display the final `fct_credit_metrics_by_customer` table. 
+1.  Review the calculated metrics in the UI.
+2.  Click the **"Send to Taktile"** button.
+3.  The application will send the metrics to the Taktile API and display the full decision response, including the final approval amount and risk analysis.
+
+<!-- IMAGE_PLACEHOLDER: Add Taktile screenshot here -->
+
+This demonstrates the end-to-end value of the data pipeline: raw data is ingested, transformed into meaningful metrics, and then used to power a real-time, automated business decision.
+
 ### List of Resources
 *   **Mock API Interface:** [http://localhost:5000](http://localhost:5000)
 *   **Analyst UI**: [http://localhost:8501](http://localhost:8501)
