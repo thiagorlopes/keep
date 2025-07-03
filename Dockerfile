@@ -53,3 +53,18 @@ WORKDIR /app
 # Expose the Jupyter port
 EXPOSE 8888
 CMD ["jupyter", "lab", "--ip=0.0.0.0", "--port=8888", "--no-browser", "--allow-root", "--NotebookApp.token=''"]
+
+
+# ===== Test Stage =====
+# This stage is specifically for running the test suite.
+FROM base as test
+WORKDIR /app
+
+# Copy all application and test code
+COPY ./api_mock ./api_mock
+COPY ./app ./app
+COPY ./pipelines ./pipelines
+COPY ./tests ./tests
+
+# Default command is to run pytest. This will be overridden in docker-compose.
+CMD ["pytest", "-v"]

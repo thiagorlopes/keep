@@ -1,5 +1,6 @@
 Flask
 pytest
+pytest-cov
 pandas
 pyarrow
 requests
@@ -10,3 +11,4 @@ deltalake
 streamlit
 duckdb
 jupyterlab
+pytest-mock

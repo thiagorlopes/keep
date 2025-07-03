@@ -73,3 +73,12 @@ services:
       - ./docs:/app/docs
     depends_on:
       - api
+
+  test:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: test
+    depends_on:
+      - api
+    command: ["pytest", "-v", "--cov=api_mock", "--cov=app", "--cov=pipelines"]
