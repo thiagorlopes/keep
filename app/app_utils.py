@@ -19,7 +19,7 @@ DBT_DB_PATH = os.path.join(DATA_LAKE_ROOT, "data_lake/dbt.duckdb")
 ANALYTICS_TABLE_NAME = "fct_daily_transactions_by_customer"
 
 # Taktile configuration
-TAKTILE_API_KEY = os.getenv("TAKTILE_DEMO_API_KEY")
+# We will read the API key inside the function to make it more testable
 TAKTILE_BASE_URL = os.getenv("TAKTILE_BASE_URL", "https://eu-central-1.taktile-demo.decide.taktile.com")
 
 def _convert_to_json_serializable(obj):
@@ -160,6 +160,7 @@ def _call_taktile_api(payload: dict, logger: logging.Logger) -> dict:
 
     This helper handles both synchronous (200) and asynchronous (202) responses.
     """
+    TAKTILE_API_KEY = os.getenv("TAKTILE_DEMO_API_KEY")
     if not TAKTILE_API_KEY:
         raise EnvironmentError("TAKTILE_DEMO_API_KEY environment variable is not set.")
 
