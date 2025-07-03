@@ -160,6 +160,10 @@ The formulas in the first section of the Google Sheet ("Revenue", "Debits", "Ave
 
 The output of this dbt model is a clean table that serves as the direct input payload for the Taktile decisioning engine.
 
+For a complete, column-level data dictionary, technical implementation details, and an interactive data lineage graph for all dbt models, please refer to the live **[dbt Docs site](http://localhost:8081)**.
+
+*<-- Placeholder for a screenshot of the dbt docs, showing the detailed documentation for the `fct_credit_metrics_by_customer` model -->*
+
 ### Mapping Taktile: From Features to Credit Decision
 The more complex, multi-step calculations from the "Risk Tier Estimation" and "Line Assignment" sections of the Google Sheet were mapped to a Taktile decision flow.
 
