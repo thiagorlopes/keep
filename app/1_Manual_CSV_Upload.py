@@ -3,7 +3,7 @@ import pandas as pd
 import sys
 import os
 import logging
-from app_utils import run_analysis_pipeline, display_taktile_interface
+from app_utils import run_analysis_pipeline, display_taktile_interface, display_reset_button
 
 # --- Logging Configuration ---
 logging.basicConfig(
@@ -32,7 +32,7 @@ st.write(
     """
 )
 
-st.header("Track A: Manual CSV Upload")
+st.header("Manual CSV Upload")
 st.write("This is the standard workflow for an analyst to manually upload and process statements.")
 
 uploaded_files = st.file_uploader(
@@ -40,6 +40,9 @@ uploaded_files = st.file_uploader(
     type="csv",
     accept_multiple_files=True
 )
+
+
+display_reset_button(st, logger)
 
 if st.button("Run Analysis on Uploaded CSVs"):
     if uploaded_files:
@@ -50,4 +53,4 @@ if st.button("Run Analysis on Uploaded CSVs"):
         logger.warning("CSV analysis button clicked but no files were uploaded.")
 
 # --- Persisted Metrics Review & Taktile Dispatch ---
-display_taktile_interface(st, logger)
+display_taktile_interface(st, logger, key_prefix="manual")

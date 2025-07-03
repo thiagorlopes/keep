@@ -2,13 +2,14 @@ import streamlit as st
 import pandas as pd
 import requests
 import logging
-from app_utils import run_analysis_pipeline, display_taktile_interface
+from app_utils import run_analysis_pipeline, display_taktile_interface, display_reset_button
 
 logger = logging.getLogger(__name__)
 
 st.set_page_config(layout="wide", page_title="Automated API Run")
 
 st.title("Automated API Ingestion")
+display_reset_button(st, logger)
 st.write("This simulates an automated workflow where data is pulled from a source API.")
 
 # Note: Ensure the mock API server is running.
@@ -44,4 +45,4 @@ if st.button("Ingest from Mock API and Run Analysis"):
         logger.warning("API analysis button clicked but no email was provided.")
 
 # --- Persisted Metrics Review & Taktile Dispatch ---
-display_taktile_interface(st, logger)
+display_taktile_interface(st, logger, key_prefix="automated")
