@@ -20,7 +20,7 @@ The project is organized into the following main directories:
 - `data_lake/`: A local Delta Lake store for the raw and transformed data.
 - `docs/`: Complementary project documentation.
 
-## Environment Setup
+## 1. Environment Setup
 
 **Prerequisites:**
 *   Docker
@@ -50,7 +50,7 @@ This command starts all services. To stop the application, run:
 ```bash
 make stop
 ```
-## How to Run the System
+## 2. How to Run the System
 ### Step 1: Running the Analysis Pipeline
 There are two ways to run the pipeline, both available in the main **Analyst UI**:
 
@@ -132,7 +132,7 @@ After the automated business decision in Taktile, the results will be rendered i
 
 This final information can be used internally at Keep for approving the limit for the customer.
 
-## Explanation of How Formulas Were Mapped
+## 3. Explanation of How Formulas Were Mapped
 This section explains how the underwriting logic from the original [Google Sheet](https://docs.google.com/spreadsheets/d/18awE6NT6wYy191_cnBDhWObZPEaH3adetrLdf948VCI/edit?gid=0#gid=0) was mapped into the code-driven system, as required by the case study.
 
 ### Architectural Strategy: Separating Data from Logic
