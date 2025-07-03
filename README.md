@@ -18,7 +18,7 @@ The project is organized into the following main directories:
 - `pipelines/`: Python scripts for the data ingestion and transformation pipelines (Bronze/Silver layers).
 - `analytics/`: The dbt project where all the business logic and financial metrics are defined and calculated.
 - `data_lake/`: A local Delta Lake store for the raw and transformed data.
-- `docs/`: Project documentation.
+- `docs/`: Complementary project documentation.
 
 ## How to Run the System
 
