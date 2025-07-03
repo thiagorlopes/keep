@@ -11,6 +11,15 @@ The primary goal is to provide a system that an analyst can use to replace the m
 *   **JupyterLab (Ad-Hoc Analysis)**: [http://localhost:8888](http://localhost:8888)
 *   **Mock API Interface**: [http://localhost:5000](http://localhost:5000)
 
+## Project Structure
+The project is organized into the following main directories:
+- `app/`: Contains the Streamlit front-end application for the Analyst UI.
+- `api_mock/`: A Flask application that mocks the Flinks API for fetching bank statements.
+- `pipelines/`: Python scripts for the data ingestion and transformation pipelines (Bronze/Silver layers).
+- `analytics/`: The dbt project where all the business logic and financial metrics are defined and calculated.
+- `data_lake/`: A local Delta Lake store for the raw and transformed data.
+- `docs/`: Project documentation.
+
 ## How to Run the System
 
 **Prerequisites:**
@@ -58,15 +67,6 @@ The pipeline can be run from the main **[Analyst UI](http://localhost:8501)**.
 After a pipeline run, the final table of credit metrics (`fct_credit_metrics_by_customer`) is displayed.
 
 For deeper, ad-hoc analysis, you can query the data directly using the **[JupyterLab environment](http://localhost:8888)**. The notebook at `analytics/analytics_development.ipynb` provides example queries.
-
-## Project Structure
-The project is organized into the following main directories:
-- `app/`: Contains the Streamlit front-end application for the Analyst UI.
-- `api_mock/`: A Flask application that mocks the Flinks API for fetching bank statements.
-- `pipelines/`: Python scripts for the data ingestion and transformation pipelines (Bronze/Silver layers).
-- `analytics/`: The dbt project where all the business logic and financial metrics are defined and calculated.
-- `data_lake/`: A local Delta Lake store for the raw and transformed data.
-- `docs/`: Project documentation.
 
 ## Taktile Integration
 The final step of the analysis is to send the metrics calculated by dbt to the Taktile decisioning engine.
