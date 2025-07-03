@@ -5,17 +5,17 @@ import os
 import argparse
 
 # Use an environment variable to determine the root path, defaulting to a relative path for local execution.
-DATA_LAKE_ROOT = os.getenv("DATA_LAKE_ROOT", ".")
+DEFAULT_DATA_LAKE_ROOT = os.getenv("DATA_LAKE_ROOT", ".")
 
-def main(write_mode: str):
+def main(write_mode: str, data_lake_root: str = DEFAULT_DATA_LAKE_ROOT):
     """
     Reads new data from the bronze layer, cleans it, and writes it to the
     silver layer and the scoring_status ledger. This pipeline is fully
     idempotent and scalable.
     """
-    BRONZE_PATH = os.path.join(DATA_LAKE_ROOT, 'data_lake/bronze')
-    SILVER_PATH = os.path.join(DATA_LAKE_ROOT, 'data_lake/silver')
-    STATUS_LEDGER_PATH = os.path.join(DATA_LAKE_ROOT, 'data_lake/application_status_ledger')
+    BRONZE_PATH = os.path.join(data_lake_root, 'data_lake/bronze')
+    SILVER_PATH = os.path.join(data_lake_root, 'data_lake/silver')
+    STATUS_LEDGER_PATH = os.path.join(data_lake_root, 'data_lake/application_status_ledger')
 
     # Read the entire bronze table.
     try:
