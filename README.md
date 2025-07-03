@@ -41,6 +41,39 @@ This command starts all services. To stop the application, run:
 ```bash
 make stop
 ```
+## Analyst Workflows
+
+### Step 1: Running the Analysis Pipeline
+The pipeline can be run from the main **[Analyst UI](http://localhost:8501)**.
+
+#### Option A: Manual CSV Upload
+1.  **Get Statement Files:** Download sample statements from the **[Mock API Interface](http://localhost:5000)**.
+2.  **Upload and Run:** On the Analyst UI, upload the CSV files and click **"Run Analysis"**.
+
+#### Option B: Automated API Run
+1.  Navigate to the **[Automated API Run](http://localhost:8501/Automated_API_Run)** page.
+2.  Enter a customer's email and click **"Ingest from Mock API and Run Analysis"**.
+
+### Step 2: Exploring the Results
+After a pipeline run, the final table of credit metrics (`fct_credit_metrics_by_customer`) is displayed.
+
+For deeper, ad-hoc analysis, you can query the data directly using the **[JupyterLab environment](http://localhost:8888)**. The notebook at `analytics/analytics_development.ipynb` provides example queries.
+
+## Project Structure
+The project is organized into the following main directories:
+- `app/`: Contains the Streamlit front-end application for the Analyst UI.
+- `api_mock/`: A Flask application that mocks the Flinks API for fetching bank statements.
+- `pipelines/`: Python scripts for the data ingestion and transformation pipelines (Bronze/Silver layers).
+- `analytics/`: The dbt project where all the business logic and financial metrics are defined and calculated.
+- `data_lake/`: A local Delta Lake store for the raw and transformed data.
+- `docs/`: Project documentation.
+
+## Taktile Integration
+The final step of the analysis is to send the metrics calculated by dbt to the Taktile decisioning engine.
+
+The Analyst UI is configured to send the `fct_credit_metrics_by_customer` table to the Taktile API. Taktile then executes the complete underwriting logic and returns the final credit limit and a detailed breakdown of the risk assessment, which is then displayed in the UI.
+
+This architecture correctly replicates the Google Sheet logic in a robust, code-driven system, where dbt handles data transformation and Taktile handles the underwriting rules.
 
 ## Explanation of How Formulas Were Mapped
 This section explains how the underwriting logic from the original [Google Sheet](https://docs.google.com/spreadsheets/d/18awE6NT6wYy191_cnBDhWObZPEaH3adetrLdf948VCI/edit?gid=0#gid=0) was mapped into the code-driven system, as required by the case study.
@@ -90,37 +123,3 @@ The more complex, multi-step calculations from the "Risk Tier Estimation" and "L
 <img width="1287" alt="image" src="https://github.com/user-attachments/assets/a1690a6e-cc6f-49f6-89ea-00526e46c0b3" />
 
 This mapping strategy successfully replicates the entire Google Sheet logic in a robust and maintainable code-driven system, fulfilling the core requirements of the case study.
-
-## Analyst Workflows
-
-### Step 1: Running the Analysis Pipeline
-The pipeline can be run from the main **[Analyst UI](http://localhost:8501)**.
-
-#### Option A: Manual CSV Upload
-1.  **Get Statement Files:** Download sample statements from the **[Mock API Interface](http://localhost:5000)**.
-2.  **Upload and Run:** On the Analyst UI, upload the CSV files and click **"Run Analysis"**.
-
-#### Option B: Automated API Run
-1.  Navigate to the **[Automated API Run](http://localhost:8501/Automated_API_Run)** page.
-2.  Enter a customer's email and click **"Ingest from Mock API and Run Analysis"**.
-
-### Step 2: Exploring the Results
-After a pipeline run, the final table of credit metrics (`fct_credit_metrics_by_customer`) is displayed.
-
-For deeper, ad-hoc analysis, you can query the data directly using the **[JupyterLab environment](http://localhost:8888)**. The notebook at `analytics/analytics_development.ipynb` provides example queries.
-
-## Project Structure
-The project is organized into the following main directories:
-- `app/`: Contains the Streamlit front-end application for the Analyst UI.
-- `api_mock/`: A Flask application that mocks the Flinks API for fetching bank statements.
-- `pipelines/`: Python scripts for the data ingestion and transformation pipelines (Bronze/Silver layers).
-- `analytics/`: The dbt project where all the business logic and financial metrics are defined and calculated.
-- `data_lake/`: A local Delta Lake store for the raw and transformed data.
-- `docs/`: Project documentation.
-
-## Taktile Integration
-The final step of the analysis is to send the metrics calculated by dbt to the Taktile decisioning engine.
-
-The Analyst UI is configured to send the `fct_credit_metrics_by_customer` table to the Taktile API. Taktile then executes the complete underwriting logic and returns the final credit limit and a detailed breakdown of the risk assessment, which is then displayed in the UI.
-
-This architecture correctly replicates the Google Sheet logic in a robust, code-driven system, where dbt handles data transformation and Taktile handles the underwriting rules.
