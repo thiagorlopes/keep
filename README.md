@@ -73,13 +73,21 @@ The output of this dbt model is a clean table that serves as the direct input pa
 ### Mapping Taktile: From Features to Credit Decision
 The more complex, multi-step calculations from the "Risk Tier Estimation" and "Line Assignment" sections of the Google Sheet were mapped to a Taktile decision flow.
 
-1.  **Risk Factor Calculation**: Taktile first takes the dbt metrics and calculates several derived risk factors, such as the ratio of the average daily balance to the estimated monthly revenue (`avg_daily_balance_to_estimated_monthly_revenue`).
+1.  **Risk Factor Calculation**: Taktile first takes the dbt metrics and calculates several derived risk factors, such as Change in estimated bank revenue Q Over Q `change_in_estimated_bank_revenue_qoq`).
+
+<img width="1001" alt="image" src="https://github.com/user-attachments/assets/db197ca4-5bff-4569-880a-d6a8a2f45c83" />
 
 2.  **Risk Scoring & Tiering**: Each risk factor is then assigned a score (typically 1, 2, or 3) based on a series of thresholds, exactly mirroring the bucketing logic in the spreadsheet. These individual scores are then averaged to produce a final `average_risk_score`. This score is then used to assign a customer to a `Risk Tier` (e.g., "Medium (Tier 3)").
 
+<img width="1001" alt="image" src="https://github.com/user-attachments/assets/2424aa0a-1dcd-46cb-906f-35722ae3c1d9" />
+
 3.  **Credit Line Assignment**: The assigned `Risk Tier` is used to look up key parameters for the credit line calculation, such as the `Debt Maximum Capacity Percentage` and a `Debt Guardrail` amount.
 
+<img width="1004" alt="image" src="https://github.com/user-attachments/assets/df9bf0ca-0871-4d3e-8468-675028f56600" />
+
 4.  **Final Approval Calculation**: Finally, the system uses these risk-adjusted parameters to calculate the `credit_limit`. It then performs the final `ROUNDDOWN` operations, as seen in the Google Sheet's "Approval Amount" section, to determine the final `credit_approval_amount` and `card_approval_amount`.
+
+<img width="1287" alt="image" src="https://github.com/user-attachments/assets/a1690a6e-cc6f-49f6-89ea-00526e46c0b3" />
 
 This mapping strategy successfully replicates the entire Google Sheet logic in a robust and maintainable code-driven system, fulfilling the core requirements of the case study.
 
