@@ -47,3 +47,32 @@ def test_is_valid_account():
     assert data_service.is_valid_account('001_statement_a') is True
     assert data_service.is_valid_account('002_statement_b') is True
     assert data_service.is_valid_account('non_existent_id') is False
+
+def test_get_account_ids_by_email():
+    """Test retrieving account IDs by email."""
+    # Test with an email that has two accounts from the config
+    assert data_service.get_account_ids_by_email("joelschaubel@gmail.com") == ["001_statement_a", "002_statement_b"]
+    # Test with a non-existent email
+    assert data_service.get_account_ids_by_email("nonexistent@email.com") == []
+
+def test_get_account_id_by_number():
+    """Test retrieving account ID by account number."""
+    # Test with a valid account number
+    account_number = data_service.ACCOUNTS[0]['AccountNumber']
+    expected_id = data_service.ACCOUNTS[0]['Id']
+    assert data_service.get_account_id_by_number(account_number) == expected_id
+    # Test with a non-existent account number
+    assert data_service.get_account_id_by_number("999999999") is None
+
+def test_load_raw_transactions(monkeypatch):
+    """Test loading raw transaction data."""
+    # This test doesn't need to mock the file system, as it should find the actual mock data
+    transactions, headers = data_service.load_raw_transactions('001_statement_a')
+    assert len(transactions) > 0
+    assert "Date" in headers
+    assert "Description" in headers
+
+    # Test file not found case for a non-existent account
+    transactions, headers = data_service.load_raw_transactions('non_existent_id')
+    assert transactions == []
+    assert headers == []
