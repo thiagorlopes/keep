@@ -20,7 +20,7 @@ The project is organized into the following main directories:
 - `data_lake/`: A local Delta Lake store for the raw and transformed data.
 - `docs/`: Complementary project documentation.
 
-## How to Run the System
+## Environment Setup
 
 **Prerequisites:**
 *   Docker
@@ -50,30 +50,87 @@ This command starts all services. To stop the application, run:
 ```bash
 make stop
 ```
-## Analyst Workflows
-
+## How to Run the System
 ### Step 1: Running the Analysis Pipeline
-The pipeline can be run from the main **[Analyst UI](http://localhost:8501)**.
+There are two ways to run the pipeline, both available in the main **Analyst UI**:
+
+**Link:** [http://localhost:8501](http://localhost:8501)
+
+<img width="800" alt="image" src="https://github.com/user-attachments/assets/423fbfb3-1d92-4efb-bdb7-e06cd3703808" />
 
 #### Option A: Manual CSV Upload
-1.  **Get Statement Files:** Download sample statements from the **[Mock API Interface](http://localhost:5000)**.
-2.  **Upload and Run:** On the Analyst UI, upload the CSV files and click **"Run Analysis"**.
+This workflow is for analyzing statements that you have saved on your computer.
+
+1.  **Get Statement Files:**
+
+First, you need statement files to analyze. You can get sample files from the included Mock API:
+<img width="800" alt="image" src="https://github.com/user-attachments/assets/f1989932-d172-4ef4-ae08-32bcfbec1a7c" />
+*   Navigate to the **Mock API Interface** at [http://localhost:5000](http://localhost:5000).
+*   Enter a customer email (e.g., `joelschaubel@gmail.com`) and click "Download Statements".
+*   A `.zip` file containing CSV statements will be downloaded. Unzip this file.
+
+2.  **Upload and Run:**
+*   On the main page of the [Analyst UI](http://localhost:8501), drag and drop the downloaded CSV files into the uploader.
+*   Click the **"Run Analysis on Uploaded CSVs"** button.
+3.  **View Results:** The system will process the files and display a summary of the results.
 
 #### Option B: Automated API Run
-1.  Navigate to the **[Automated API Run](http://localhost:8501/Automated_API_Run)** page.
-2.  Enter a customer's email and click **"Ingest from Mock API and Run Analysis"**.
+This workflow is for analyzing a customer's data by pulling it directly from the mocked Flinks system.
+1.  Using the sidebar, navigate to the [Automated API Run](http://localhost:8501/Automated_API_Run) page.
+2.  Enter the customer's email address and click **"Ingest from Mock API and Run Analysis"**.
+3.  The system will fetch the data, process it, and display a summary.
 
 ### Step 2: Exploring the Results
-After a pipeline run, the final table of credit metrics (`fct_credit_metrics_by_customer`) is displayed.
+After a pipeline run is complete, you can dig deeper into the data and the business logic using the following tools.
 
-For deeper, ad-hoc analysis, you can query the data directly using the **[JupyterLab environment](http://localhost:8888)**. The notebook at `analytics/analytics_development.ipynb` provides example queries.
+#### Understanding the Data: dbt Docs
+First, to understand what tables were created, what each column means, and to see the business logic, use the live data documentation.
+*   **Link:** [http://localhost:8081](http://localhost:8081)
 
-## Taktile Integration
-The final step of the analysis is to send the metrics calculated by dbt to the Taktile decisioning engine.
+The dbt docs provide an interactive dependency graph, so you can check the relationship between the models:
 
-The Analyst UI is configured to send the `fct_credit_metrics_by_customer` table to the Taktile API. Taktile then executes the complete underwriting logic and returns the final credit limit and a detailed breakdown of the risk assessment, which is then displayed in the UI.
+![image](https://github.com/user-attachments/assets/a21e5a9a-9f54-4c86-9354-d46de09fc657)
 
-This architecture correctly replicates the Google Sheet logic in a robust, code-driven system, where dbt handles data transformation and Taktile handles the underwriting rules.
+It also provides a [full data dictionary](http://localhost:8081/#!/model/model.customer_transactions.all_transactions_by_customer), making it easy to understand how the metrics are calculated.
+
+<img width="800" alt="image" src="https://github.com/user-attachments/assets/dd6e0cc0-4bbe-4b70-b137-5c522a2f7cb1" />
+
+#### Querying the Data: JupyterLab
+For hands-on, ad-hoc analysis, you can use the provided JupyterLab environment to write your own SQL queries against the generated data.
+*   **Link:** [http://localhost:8888](http://localhost:8888)
+
+<img width="1250" alt="image" src="https://github.com/user-attachments/assets/8868ac45-b3d6-4393-acff-bf0e1a26a393" />
+
+**Example:** To query the daily transactions table, you can access the notebook [analytics/analytics_development.ipynb](http://localhost:8888/lab/tree/analytics/analytics_development.ipynb). Next you can visualize by inputting the string "fct_daily_transactions_by_customer" in the input box and clicking on `Load Model`. Also, you can query data from the dbt model in the following manner:
+
+```sql
+SELECT * FROM main.fct_daily_transactions_by_customer
+```
+
+Remember that, in dbt, you reference an input model as {{ ref('model_name') }}, while, in the notebook, you should use main.model_name.
+
+### Step 3: Making a Decision with Taktile
+The final step of the workflow is to take the calculated credit metrics and use them to make an underwriting decision. This project uses [Taktile](https://app.taktile.com/decide/org/976b336b-e6b4-4904-8e20-1e27c33dc099/ws/3bba1a21-aaa5-457b-af1b-422404e0e960/flows?folder-id=8f6e925b-ea9e-46e4-a30a-953c4c418d9d), a modern decisioning platform, to model the decision flow.
+
+After a pipeline run is complete, the Analyst UI will display the final `fct_credit_metrics_by_customer` table. 
+
+<img width="1440" alt="image" src="https://github.com/user-attachments/assets/e94ed16e-f1aa-4bac-8bd2-b6a4dcd7b762" />
+
+The next steps then are:
+
+1.  Review the calculated metrics in the UI.
+2.  Click the **"Send to Taktile"** button.
+3.  The application will send the metrics to the Taktile API and display the full decision response, including the final approval amount and risk analysis.
+
+The picture below shows part of the decision flow in Taktile.
+
+![image](https://github.com/user-attachments/assets/fe9e8f77-1a32-4e93-95f6-6cbd08a45a5b)
+
+After the automated business decision in Taktile, the results will be rendered in the Analyst UI:
+
+<img width="1423" alt="image" src="https://github.com/user-attachments/assets/5642fbf3-3e1d-4de0-98d0-63bb549ee8ce" />
+
+This final information can be used internally at Keep for approving the limit for the customer.
 
 ## Explanation of How Formulas Were Mapped
 This section explains how the underwriting logic from the original [Google Sheet](https://docs.google.com/spreadsheets/d/18awE6NT6wYy191_cnBDhWObZPEaH3adetrLdf948VCI/edit?gid=0#gid=0) was mapped into the code-driven system, as required by the case study.
