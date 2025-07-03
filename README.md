@@ -184,3 +184,4 @@ This mapping strategy successfully replicates the entire Google Sheet logic in a
 *   **dbt Docs (Data Dictionary & Lineage)**: [http://localhost:8081](http://localhost:8081)
 *   **JupyterLab (Ad-Hoc Analysis)**: [http://localhost:8888](http://localhost:8888)
 *   **Mock API Interface**: [http://localhost:5000](http://localhost:5000)
+*   **Taktile Workspace**: [https://app.taktile.com/decide/org/976b336b-e6b4-4904-8e20-1e27c33dc099/ws/3bba1a21-aaa5-457b-af1b-422404e0e960/flows](https://app.taktile.com/decide/org/976b336b-e6b4-4904-8e20-1e27c33dc099/ws/3bba1a21-aaa5-457b-af1b-422404e0e960/flows)
