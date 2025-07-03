@@ -73,3 +73,83 @@ def test_get_statements_invalid_account(client):
     assert response.status_code == 404
     data = json.loads(response.data)
     assert "not found" in data['error']
+
+# --- New Tests for Increased Coverage ---
+
+def test_index_route(client):
+    """Test the index route."""
+    response = client.get('/')
+    assert response.status_code == 200
+    assert b"<title>Flinks Mock Interface</title>" in response.data
+
+def test_get_accounts_detail_missing_loginid(client):
+    """Test GetAccountsDetail endpoint when LoginId is missing."""
+    response = client.post(f'/v3/{uuid4()}/BankingServices/GetAccountsDetail', data=json.dumps({}), content_type='application/json')
+    assert response.status_code == 400
+    data = json.loads(response.data)
+    assert data['error'] == 'LoginId is required'
+
+def test_get_statements_missing_payload(client):
+    """Test GetStatements endpoint with missing payload keys."""
+    # Missing LoginId
+    response = client.post(
+        f'/v3/{uuid4()}/BankingServices/GetStatements',
+        data=json.dumps({'AccountNumber': '123'}),
+        content_type='application/json'
+    )
+    assert response.status_code == 400
+    assert json.loads(response.data)['error'] == 'LoginId is required'
+    
+    # Missing AccountNumber
+    response = client.post(
+        f'/v3/{uuid4()}/BankingServices/GetStatements',
+        data=json.dumps({'LoginId': str(uuid4())}),
+        content_type='application/json'
+    )
+    assert response.status_code == 400
+    assert json.loads(response.data)['error'] == 'AccountNumber is required'
+
+def test_download_statement_success(client):
+    """Test the download_statement endpoint for a successful case."""
+    response = client.post('/download', data={'email': 'joelschaubel@gmail.com'})
+    assert response.status_code == 200
+    data = json.loads(response.data)
+    assert data['Email'] == 'joelschaubel@gmail.com'
+    assert len(data['Statements']) == 2
+    assert 'Content_Base64' in data['Statements'][0]
+
+def test_download_statement_email_not_found(client):
+    """Test the download_statement endpoint for an email that doesn't exist."""
+    response = client.post('/download', data={'email': 'nonexistent@email.com'})
+    assert response.status_code == 404
+    data = json.loads(response.data)
+    assert 'not found' in data['error']
+
+def test_download_statement_missing_email(client):
+    """Test the download_statement endpoint when email is missing."""
+    response = client.post('/download')
+    assert response.status_code == 400
+    data = json.loads(response.data)
+    assert 'Email is required' in data['error']
+
+def test_get_combined_statements_by_email_success(client):
+    """Test get_combined_statements_by_email for a successful case."""
+    response = client.get('/api/statements?email=joelschaubel@gmail.com')
+    assert response.status_code == 200
+    data = json.loads(response.data)
+    # Based on mock data files, the user has transactions in both files
+    assert len(data) > 2
+
+def test_get_combined_statements_email_not_found(client):
+    """Test get_combined_statements_by_email for a non-existent email."""
+    response = client.get('/api/statements?email=nonexistent@email.com')
+    assert response.status_code == 404
+    data = json.loads(response.data)
+    assert 'not found' in data['error']
+
+def test_get_combined_statements_missing_email(client):
+    """Test get_combined_statements_by_email when the email parameter is missing."""
+    response = client.get('/api/statements')
+    assert response.status_code == 400
+    data = json.loads(response.data)
+    assert 'Email query parameter is required' in data['error']
