@@ -43,6 +43,11 @@ def run_analysis_pipeline(source_df: pd.DataFrame):
     """
     Runs the full analysis pipeline from a given source DataFrame.
     """
+    # --- Clear previous Taktile results before starting a new analysis ---
+    if "taktile_decision_resp" in st.session_state:
+        del st.session_state["taktile_decision_resp"]
+        logger.info("Cleared previous Taktile decision from session state.")
+
     if source_df.empty:
         st.warning("The source data is empty. Please provide valid data.")
         logger.warning("run_analysis_pipeline called with an empty DataFrame.")
@@ -195,7 +200,17 @@ def _call_taktile_api(payload: dict, logger: logging.Logger) -> dict:
         poll_resp.raise_for_status()
     return resp_json
 
-def display_taktile_interface(st, logger):
+def display_reset_button(st, logger):
+    """Displays a button to clear the session state and start a new analysis."""
+    if "credit_metrics_df" in st.session_state or "taktile_decision_resp" in st.session_state:
+        if st.button("Start New Analysis"):
+            for key in ["credit_metrics_df", "final_df", "taktile_decision_resp"]:
+                if key in st.session_state:
+                    del st.session_state[key]
+            logger.info("Session state cleared by user.")
+            st.rerun()
+
+def display_taktile_interface(st, logger, key_prefix: str):
     """
     Renders the Taktile interaction interface in Streamlit,
     including the button to send the request and the display of the response.
@@ -214,7 +229,8 @@ def display_taktile_interface(st, logger):
                 with st.spinner("Sending to Taktile..."):
                     try:
                         row = credit_metrics_df.iloc[0]
-                        
+                        log_prefix = f"[{row.get('email', 'Unknown')}] -"
+
                         data_payload = {
                             "request_id": row.get("request_id", 0),
                             "email": row.get("email", 0),
@@ -245,122 +261,173 @@ def display_taktile_interface(st, logger):
                             "control": {"execution_mode": "sync"},
                         }
                         decision_resp = _call_taktile_api(takt_payload, logger)
-                        st.success("Decision received from Taktile!")
-                        
-                        # Display key decision metrics in a user-friendly format
-                        if "data" in decision_resp:
-                            data = decision_resp["data"]
-                            
-                            # Risk Tier Estimation Section (moved to first)
-                            st.subheader("Risk Tier Estimation")
-                            risk_estimation_data = {
-                                "Metric": [
-                                    "Average Risk Score",
-                                    "Average daily Balance to Estimated Monthly Revenue",
-                                    "Debt/Revenue Ratio",
-                                    "Change in estimated Bank Revenue Q over Q (Bank)",
-                                    "Current Balance to Avg Balance in last 6 months",
-                                    "Years in Business",
-                                    "Monthly burn",
-                                    "Runway (Months)"
-                                ],
-                                "Values": [
-                                    str(data.get('average_risk_score', 'N/A')),
-                                    f"{data.get('average_daily_balance_to_estimated_monthly_revenue', 0):.2%}",
-                                    f"{data.get('debt_revenue_ratio', 0):.2%}",
-                                    f"{data.get('change_in_estimated_bank_revenue_qoq', 0):.2%}",
-                                    f"{data.get('current_balance_to_avg_balance_in_last_6_months', 0):.2%}",
-                                    "More than 5 years",  # Use the value we sent to Taktile
-                                    f"${data.get('monthly_burn', 0):,.2f}",
-                                    f"{data.get('runway_months', 0):,.2f}" if data.get('runway_months') is not None else "N/A"
-                                ]
-                            }
-                            
-                            risk_df = pd.DataFrame(risk_estimation_data)
-                            st.dataframe(risk_df, hide_index=True, use_container_width=True)
-                            
-                            # Line Assignment Section
-                            st.subheader("Line Assignment")
-                            
-                            # Create data for the table
-                            line_assignment_data = {
-                                "Metric": [
-                                    "Maximum Debt Capacity",
-                                    "Already Used", 
-                                    "Remaining Capacity",
-                                    "Guardrail",
-                                    "Credit Limit"
-                                ],
-                                "Amount": [
-                                    f"${data.get('debt_maximum_capacity', 0):,.2f}",
-                                    f"${data.get('debt_used', 0):,.2f}",  # Use actual API data
-                                    f"${data.get('debt_remaining_capacity', 0):,.2f}",
-                                    f"${data.get('debt_guardrail', 0):,.2f}",
-                                    f"${data.get('credit_limit', 0):,.2f}"
-                                ]
-                            }
-                            
-                            line_df = pd.DataFrame(line_assignment_data)
-                            st.dataframe(line_df, hide_index=True, use_container_width=True)
-                            
-                            # Approval Amount (highlighted)
-                            st.markdown("### Approval Amount")
-                            approval_amount = data.get("credit_approval_amount", 0)
-                            st.markdown(f"<div style='background-color: #f0f0f0; padding: 10px; text-align: center; font-size: 24px; font-weight: bold;'>${approval_amount:,.2f}</div>", unsafe_allow_html=True)
-                            
-                            # Card's MCA Section
-                            st.subheader("Card's MCA")
-                            card_mca_data = {
-                                "Metric": [
-                                    "Avg Weekly Revenue",
-                                    "Avg Calculated Daily Revenue",
-                                    "Daily withdrawal",
-                                    "MAX approval amount",
-                                    "Card Approval Amount"
-                                ],
-                                "Amount": [
-                                    f"${data.get('average_weekly_revenue', 0):,.2f}",
-                                    f"${data.get('average_calculated_daily_revenue', 0):,.2f}",
-                                    f"${data.get('daily_withdrawal', 0):,.2f}",
-                                    f"${data.get('card_max_approval_amount', 0):,.2f}",
-                                    f"${data.get('card_approval_amount', 0):,.2f}"
-                                ]
-                            }
-                            
-                            card_df = pd.DataFrame(card_mca_data)
-                            st.dataframe(card_df, hide_index=True, use_container_width=True)
-                            
-                            # Capital MCA Section
-                            st.subheader("Capital MCA")
-                            capital_mca_data = {
-                                "Metric": [
-                                    "Risk Tier",
-                                    "Length Multiplier (in weeks)",
-                                    "Repayment Frequency (daily, weekly, monthly)",
-                                    "Max Approval Amount",
-                                    "Capital MCA Approval Amount",
-                                    "Capital+ Approval Amount"
-                                ],
-                                "Value": [
-                                    data.get("risk_tier", "N/A"),
-                                    str(data.get("length_multiplier_in_weeks", 0)),
-                                    data.get("repayment_frequency", "N/A"),
-                                    f"${data.get('capital_max_approval_amount', 0):,.2f}",
-                                    f"${data.get('capital_mca_approval_amount', 0):,.2f}",
-                                    f"${data.get('capital_approval_amount', 0):,.2f}"
-                                ]
-                            }
-                            
-                            capital_df = pd.DataFrame(capital_mca_data)
-                            st.dataframe(capital_df, hide_index=True, use_container_width=True)
-                            
-                            # Expandable detailed response
-                            with st.expander("Full Response Details"):
-                                st.json(decision_resp)
-                        
-                        else:
-                            st.warning("Unexpected response format from Taktile")
-                            st.json(decision_resp)
-                        
+                        st.session_state["taktile_decision_resp"] = decision_resp # Persist the response
+                        logger.info(f"{log_prefix} Successfully received decision from Taktile.")
+                        st.rerun() # Immediately rerun to display the persisted state
+
                     except Exception as e:
                         st.error(f"Taktile request failed: {e}")
+
+        # If a Taktile response exists in the session state, always display it
+        if "taktile_decision_resp" in st.session_state:
+            decision_resp = st.session_state["taktile_decision_resp"]
+            credit_metrics_df = st.session_state["credit_metrics_df"] # Also retrieve the payload df
+            log_prefix = f"[{credit_metrics_df.iloc[0].get('email', 'Unknown')}] -"
+            row = credit_metrics_df.iloc[0] # Define row here to get email for filename
+
+            st.success("Decision received from Taktile!")
+            # Display key decision metrics in a user-friendly format
+            if "data" in decision_resp:
+                data = decision_resp["data"]
+
+                # Risk Tier Estimation Section (moved to first)
+                st.subheader("Risk Tier Estimation")
+                risk_estimation_data = {
+                    "Metric": [
+                        "Average Risk Score",
+                        "Average daily Balance to Estimated Monthly Revenue",
+                        "Debt/Revenue Ratio",
+                        "Change in estimated Bank Revenue Q over Q (Bank)",
+                        "Current Balance to Avg Balance in last 6 months",
+                        "Years in Business",
+                        "Monthly burn",
+                        "Runway (Months)"
+                    ],
+                    "Values": [
+                        str(data.get('average_risk_score', 'N/A')),
+                        f"{data.get('average_daily_balance_to_estimated_monthly_revenue', 0):.2%}",
+                        f"{data.get('debt_revenue_ratio', 0):.2%}",
+                        f"{data.get('change_in_estimated_bank_revenue_qoq', 0):.2%}",
+                        f"{data.get('current_balance_to_avg_balance_in_last_6_months', 0):.2%}",
+                        "More than 5 years",  # Use the value we sent to Taktile
+                        f"${data.get('monthly_burn', 0):,.2f}",
+                        f"{data.get('runway_months', 0):,.2f}" if data.get('runway_months') is not None else "N/A"
+                    ]
+                }
+
+                risk_df = pd.DataFrame(risk_estimation_data)
+                st.dataframe(risk_df, hide_index=True, use_container_width=True)
+
+                # Line Assignment Section
+                st.subheader("Line Assignment")
+
+                # Create data for the table
+                line_assignment_data = {
+                    "Metric": [
+                        "Maximum Debt Capacity",
+                        "Already Used",
+                        "Remaining Capacity",
+                        "Guardrail",
+                        "Credit Limit"
+                    ],
+                    "Amount": [
+                        f"${data.get('debt_maximum_capacity', 0):,.2f}",
+                        f"${data.get('debt_used', 0):,.2f}",  # Use actual API data
+                        f"${data.get('debt_remaining_capacity', 0):,.2f}",
+                        f"${data.get('debt_guardrail', 0):,.2f}",
+                        f"${data.get('credit_limit', 0):,.2f}"
+                    ]
+                }
+
+                line_df = pd.DataFrame(line_assignment_data)
+                st.dataframe(line_df, hide_index=True, use_container_width=True)
+
+                # Approval Amount (highlighted)
+                st.markdown("### Approval Amount")
+                approval_amount = data.get("credit_approval_amount", 0)
+                st.markdown(f"<div style='background-color: #f0f0f0; padding: 10px; text-align: center; font-size: 24px; font-weight: bold;'>${approval_amount:,.2f}</div>", unsafe_allow_html=True)
+
+                # Card's MCA Section
+                st.subheader("Card's MCA")
+                card_mca_data = {
+                    "Metric": [
+                        "Avg Weekly Revenue",
+                        "Avg Calculated Daily Revenue",
+                        "Daily withdrawal",
+                        "MAX approval amount",
+                        "Card Approval Amount"
+                    ],
+                    "Amount": [
+                        f"${data.get('average_weekly_revenue', 0):,.2f}",
+                        f"${data.get('average_calculated_daily_revenue', 0):,.2f}",
+                        f"${data.get('daily_withdrawal', 0):,.2f}",
+                        f"${data.get('card_max_approval_amount', 0):,.2f}",
+                        f"${data.get('card_approval_amount', 0):,.2f}"
+                    ]
+                }
+
+                card_df = pd.DataFrame(card_mca_data)
+                st.dataframe(card_df, hide_index=True, use_container_width=True)
+
+                # Capital MCA Section
+                st.subheader("Capital MCA")
+                capital_mca_data = {
+                    "Metric": [
+                        "Risk Tier",
+                        "Length Multiplier (in weeks)",
+                        "Repayment Frequency (daily, weekly, monthly)",
+                        "Max Approval Amount",
+                        "Capital MCA Approval Amount",
+                        "Capital+ Approval Amount"
+                    ],
+                    "Value": [
+                        data.get("risk_tier", "N/A"),
+                        str(data.get("length_multiplier_in_weeks", 0)),
+                        data.get("repayment_frequency", "N/A"),
+                        f"${data.get('capital_max_approval_amount', 0):,.2f}",
+                        f"${data.get('capital_mca_approval_amount', 0):,.2f}",
+                        f"${data.get('capital_approval_amount', 0):,.2f}"
+                    ]
+                }
+
+                capital_df = pd.DataFrame(capital_mca_data)
+                st.dataframe(capital_df, hide_index=True, use_container_width=True)
+
+                # --- Final Combined Output & Download ---
+                logger.info(f"{log_prefix} Preparing final combined output table.")
+                st.markdown("---")
+                st.subheader("Final Combined Output")
+                st.write(
+                    "This table combines the original features sent to Taktile with the decision results received."
+                )
+
+                # Prepare the two dataframes for joining
+                taktile_results_df = pd.json_normalize(data)
+                logger.info(f"{log_prefix} Original payload shape: {credit_metrics_df.shape}")
+                logger.info(f"{log_prefix} Taktile response normalized. Shape: {taktile_results_df.shape}")
+
+                # Identify and drop duplicate columns from the Taktile results to prevent join error
+                payload_columns = credit_metrics_df.columns
+                taktile_columns = taktile_results_df.columns
+                duplicate_columns = payload_columns.intersection(taktile_columns)
+
+                if not duplicate_columns.empty:
+                    logger.warning(f"{log_prefix} Found {len(duplicate_columns)} duplicate columns. Dropping from Taktile results before join.")
+                    taktile_results_df = taktile_results_df.drop(columns=duplicate_columns)
+                    logger.info(f"{log_prefix} Taktile results shape after dropping duplicates: {taktile_results_df.shape}")
+
+                # Reset index to ensure a clean side-by-side join
+                payload_df_reset = credit_metrics_df.reset_index(drop=True)
+                taktile_results_df_reset = taktile_results_df.reset_index(drop=True)
+
+                final_combined_df = pd.concat([payload_df_reset, taktile_results_df_reset], axis=1)
+                logger.info(f"{log_prefix} Final combined DataFrame created. Shape: {final_combined_df.shape}")
+
+                st.dataframe(final_combined_df)
+
+                st.download_button(
+                   label="Download Results as CSV",
+                   data=final_combined_df.to_csv(index=False).encode('utf-8'),
+                   file_name=f"taktile_results_{row.get('email', 'user')}.csv",
+                   mime='text/csv',
+                   key=f"{key_prefix}_download_button"
+                )
+                # --- End of Final Output ---
+
+                # Expandable detailed response
+                with st.expander("Full Response Details"):
+                    st.json(decision_resp)
+
+            else:
+                st.warning("Unexpected response format from Taktile")
+                st.json(decision_resp)
