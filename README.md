@@ -5,12 +5,6 @@ This project fully replicates a [Google Sheet-based underwriting process](https:
 
 The primary goal is to provide a system that an analyst can use to replace the manual spreadsheet, allowing them to drop in fresh CSVs and receive an accurate underwriting analysis with a single command.
 
-## List of Resources
-*   **Analyst UI**: [http://localhost:8501](http://localhost:8501)
-*   **dbt Docs (Data Dictionary & Lineage)**: [http://localhost:8081](http://localhost:8081)
-*   **JupyterLab (Ad-Hoc Analysis)**: [http://localhost:8888](http://localhost:8888)
-*   **Mock API Interface**: [http://localhost:5000](http://localhost:5000)
-
 ## Project Structure
 The project is organized into the following main directories:
 - `app/`: Contains the Streamlit front-end application for the Analyst UI.
@@ -184,3 +178,9 @@ The more complex, multi-step calculations from the "Risk Tier Estimation" and "L
 <img width="1287" alt="image" src="https://github.com/user-attachments/assets/a1690a6e-cc6f-49f6-89ea-00526e46c0b3" />
 
 This mapping strategy successfully replicates the entire Google Sheet logic in a robust and maintainable code-driven system, fulfilling the core requirements of the case study.
+
+## List of Resources
+*   **Analyst UI**: [http://localhost:8501](http://localhost:8501)
+*   **dbt Docs (Data Dictionary & Lineage)**: [http://localhost:8081](http://localhost:8081)
+*   **JupyterLab (Ad-Hoc Analysis)**: [http://localhost:8888](http://localhost:8888)
+*   **Mock API Interface**: [http://localhost:5000](http://localhost:5000)
