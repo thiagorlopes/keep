@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import mock_open, patch
-from app.services import data_service
+from api_mock.services import data_service
 
 @pytest.fixture
 def mock_csv_data():

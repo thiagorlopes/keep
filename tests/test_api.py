@@ -1,7 +1,8 @@
 import pytest
 import json
 from uuid import uuid4
-from app import create_app
+from api_mock import create_app
+from api_mock.services import data_service
 
 @pytest.fixture
 def client():
@@ -40,22 +41,24 @@ def test_get_statements_endpoint_success(client, monkeypatch):
     """Test the /GetStatements endpoint for a successful case."""
     # We can mock the service layer to isolate the API test
     monkeypatch.setattr(
-        'app.services.data_service.load_transactions',
+        'api_mock.services.data_service.load_transactions',
         lambda x: [{'Amount': 100}]
     )
 
     customer_id = uuid4()
     login_id = uuid4()
-    account_id = '001_statement_a'
+    # Use a valid account number from the data service
+    account_number = data_service.ACCOUNTS[0]['AccountNumber']
 
     response = client.post(
         f'/v3/{customer_id}/BankingServices/GetStatements',
-        data=json.dumps({'LoginId': str(login_id), 'AccountId': account_id}),
+        data=json.dumps({'LoginId': str(login_id), 'AccountNumber': account_number}),
         content_type='application/json'
     )
     assert response.status_code == 200
     data = json.loads(response.data)
-    assert data['Statements'][0]['AccountId'] == account_id
+    # The API returns the internal ID, not the account number
+    assert data['Statements'][0]['AccountId'] == data_service.ACCOUNTS[0]['Id']
     assert len(data['Statements'][0]['Transactions']) == 1
 
 def test_get_statements_invalid_account(client):
@@ -64,9 +67,9 @@ def test_get_statements_invalid_account(client):
     login_id = uuid4()
     response = client.post(
         f'/v3/{customer_id}/BankingServices/GetStatements',
-        data=json.dumps({'LoginId': str(login_id), 'AccountId': 'invalid_id'}),
+        data=json.dumps({'LoginId': str(login_id), 'AccountNumber': 'invalid_account_number'}),
         content_type='application/json'
     )
     assert response.status_code == 404
     data = json.loads(response.data)
-    assert data['error'] == 'Invalid AccountId'
+    assert "not found" in data['error']
