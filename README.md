@@ -1,7 +1,7 @@
 # Underwriting Analysis System
 
 ## Project Goal
-This project fully replicates a Google Sheet-based underwriting process with a robust, code-driven system. It ingests raw bank statement CSVs, programmatically re-implements all the required financial metrics, and outputs a clean, auditable table containing all the calculated variables and the final `Credit Limit`.
+This project fully replicates a [Google Sheet-based underwriting process](https://docs.google.com/spreadsheets/d/18awE6NT6wYy191_cnBDhWObZPEaH3adetrLdf948VCI/edit?gid=0#gid=0) with a robust, code-driven system. It ingests raw bank statement CSVs, programmatically re-implements all the required financial metrics, and outputs a clean, auditable table containing all the calculated variables and the final `Credit Limit`.
 
 The primary goal is to provide a system that an analyst can use to replace the manual spreadsheet, allowing them to drop in fresh CSVs and receive an accurate underwriting analysis with a single command.
 
