@@ -16,11 +16,16 @@ WITH int_transactions_enriched AS (
         is_revenue,
         is_debit,
         most_recent_statement_date,
-        most_recent_statement_date_minus_30_days,
-        most_recent_statement_date_minus_60_days,
-        most_recent_statement_date_minus_90_days,
-        most_recent_statement_date_minus_180_days,
-        most_recent_statement_date_minus_365_days
+        most_recent_statement_date_minus_30d,
+        most_recent_statement_date_minus_60d,
+        most_recent_statement_date_minus_90d,
+        most_recent_statement_date_minus_180d,
+        most_recent_statement_date_minus_365d,
+        date > most_recent_statement_date_minus_30d AS is_30d_period,
+        date > most_recent_statement_date_minus_60d AS is_60d_period,
+        date > most_recent_statement_date_minus_90d AS is_90d_period,
+        date > most_recent_statement_date_minus_180d AS is_180d_period,
+        date > most_recent_statement_date_minus_365d AS is_365d_period
     FROM {{ ref('int_transactions_enriched') }}
 )
 
@@ -34,18 +39,18 @@ WITH int_transactions_enriched AS (
         email,
         request_id,
         date,
-        
+
         -- Use 180 days as default for scaffolding, but this can be easily changed
-        most_recent_statement_date_minus_365_days AS start_date,
+        most_recent_statement_date_minus_365d AS start_date,
         most_recent_statement_date AS end_date,
-        
+
         -- Include all auxiliary date columns for reference
         most_recent_statement_date,
-        most_recent_statement_date_minus_30_days,
-        most_recent_statement_date_minus_60_days,
-        most_recent_statement_date_minus_90_days,
-        most_recent_statement_date_minus_180_days,
-        most_recent_statement_date_minus_365_days
+        most_recent_statement_date_minus_30d,
+        most_recent_statement_date_minus_60d,
+        most_recent_statement_date_minus_90d,
+        most_recent_statement_date_minus_180d,
+        most_recent_statement_date_minus_365d
     FROM int_transactions_enriched
     GROUP BY ALL
 )
@@ -127,14 +132,14 @@ WITH int_transactions_enriched AS (
         -- Daily and weekly revenues
         drv.daily_revenue,
         wrv.weekly_revenue,
-        
+
         -- Include auxiliary date columns for reference
         ANY_VALUE(cdr.most_recent_statement_date) OVER (PARTITION BY db.email, db.request_id) AS most_recent_statement_date,
-        ANY_VALUE(cdr.most_recent_statement_date_minus_30_days) OVER (PARTITION BY db.email, db.request_id) AS most_recent_statement_date_minus_30_days,
-        ANY_VALUE(cdr.most_recent_statement_date_minus_60_days) OVER (PARTITION BY db.email, db.request_id) AS most_recent_statement_date_minus_60_days,
-        ANY_VALUE(cdr.most_recent_statement_date_minus_90_days) OVER (PARTITION BY db.email, db.request_id) AS most_recent_statement_date_minus_90_days,
-        ANY_VALUE(cdr.most_recent_statement_date_minus_180_days) OVER (PARTITION BY db.email, db.request_id) AS most_recent_statement_date_minus_180_days,
-        ANY_VALUE(cdr.most_recent_statement_date_minus_365_days) OVER (PARTITION BY db.email, db.request_id) AS most_recent_statement_date_minus_365_days
+        ANY_VALUE(cdr.most_recent_statement_date_minus_30d) OVER (PARTITION BY db.email, db.request_id) AS most_recent_statement_date_minus_30d,
+        ANY_VALUE(cdr.most_recent_statement_date_minus_60d) OVER (PARTITION BY db.email, db.request_id) AS most_recent_statement_date_minus_60d,
+        ANY_VALUE(cdr.most_recent_statement_date_minus_90d) OVER (PARTITION BY db.email, db.request_id) AS most_recent_statement_date_minus_90d,
+        ANY_VALUE(cdr.most_recent_statement_date_minus_180d) OVER (PARTITION BY db.email, db.request_id) AS most_recent_statement_date_minus_180d,
+        ANY_VALUE(cdr.most_recent_statement_date_minus_365d) OVER (PARTITION BY db.email, db.request_id) AS most_recent_statement_date_minus_365d
 
     FROM daily_balances AS db
     LEFT JOIN daily_revenue AS drv USING(email, request_id, date)
