@@ -134,21 +134,31 @@ WITH int_transactions_enriched AS (
         scf.email,
         scf.request_id,
         scf.date,
+        arb.real_balance,
         -- Average balance for days with multiple transactions
         AVG(trn.balance) AS average_balance
     FROM customer_scaffold AS scf
     LEFT JOIN int_transactions_enriched AS trn ON scf.email = trn.email
         AND scf.request_id = trn.request_id
         AND scf.date = trn.date
+    lEFT JOIN agg_real_balance_180d AS arb ON trn.email = arb.email
+        AND trn.request_id = arb.request_id
+        AND trn.date = arb.date
     GROUP BY ALL
+    order by scf.date desc
 )
-
 ,daily_balances AS (
+
     SELECT
         email,
         request_id,
         date,
         -- Fill forward the last known balance for days without transactions
+        LAST_VALUE(real_balance IGNORE NULLS) OVER(
+            PARTITION BY email, request_id
+            ORDER BY date
+            ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+        ) AS revised_real_balance,
         LAST_VALUE(average_balance IGNORE NULLS) OVER(
             PARTITION BY email, request_id
             ORDER BY date
@@ -174,7 +184,7 @@ WITH int_transactions_enriched AS (
         email,
         request_id,
         date,
-        
+
         -- Sum of all deposits for the day. This is the "Weekly revenue" from the sheet.
         SUM(deposits) OVER(PARTITION BY email, request_id, WEEKOFYEAR(date)) AS weekly_revenue,
     FROM int_transactions_enriched
@@ -187,6 +197,7 @@ WITH int_transactions_enriched AS (
         db.email,
         db.request_id,
         db.date,
+        ROUND(db.revised_real_balance, 2) AS revised_real_balance,
         ROUND(db.revised_average_balance, 2) AS revised_average_balance,
 
         -- Daily and weekly revenues
