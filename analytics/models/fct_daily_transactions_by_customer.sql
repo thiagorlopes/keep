@@ -148,7 +148,6 @@ WITH int_transactions_enriched AS (
         email,
         request_id,
         date,
-
         -- Fill forward the last known balance for days without transactions
         LAST_VALUE(average_balance IGNORE NULLS) OVER(
             PARTITION BY email, request_id
