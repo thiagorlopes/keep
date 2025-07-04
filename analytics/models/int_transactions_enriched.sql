@@ -46,11 +46,11 @@ WITH transactions_with_latest_date AS (
 
         -- Date columns for metrics calculations downstream
         most_recent_statement_date,
-        (most_recent_statement_date - INTERVAL '30' DAY)::DATE AS most_recent_statement_date_minus_30_days,
-        (most_recent_statement_date - INTERVAL '60' DAY)::DATE AS most_recent_statement_date_minus_60_days,
-        (most_recent_statement_date - INTERVAL '90' DAY)::DATE AS most_recent_statement_date_minus_90_days,
-        (most_recent_statement_date - INTERVAL '180' DAY)::DATE AS most_recent_statement_date_minus_180_days,
-        (most_recent_statement_date - INTERVAL '365' DAY)::DATE AS most_recent_statement_date_minus_365_days,
+        (most_recent_statement_date - INTERVAL '30' DAY)::DATE AS most_recent_statement_date_minus_30d,
+        (most_recent_statement_date - INTERVAL '60' DAY)::DATE AS most_recent_statement_date_minus_60d,
+        (most_recent_statement_date - INTERVAL '90' DAY)::DATE AS most_recent_statement_date_minus_90d,
+        (most_recent_statement_date - INTERVAL '180' DAY)::DATE AS most_recent_statement_date_minus_180d,
+        (most_recent_statement_date - INTERVAL '365' DAY)::DATE AS most_recent_statement_date_minus_365d,
     FROM transactions_with_latest_date
 )
 
