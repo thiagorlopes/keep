@@ -140,13 +140,13 @@ This approach allows the underwriting rules in Taktile to be updated by a risk a
 ### Mapping dbt: From Raw Data to Financial Features
 The formulas in the first section of the Google Sheet ("Revenue", "Debits", "Averages and balances") were mapped to a series of dbt models that progressively refine the data.
 
-1.  **Staging and Enrichment (`stg_transactions`, `int_transactions_enriched`)**: The process begins by taking the raw transaction data and cleaning it. We standardize data types, handle missing values, and add key flags (e.g., `is_revenue`, `is_debit`) and date markers (e.g., `most_recent_statement_date_minus_90_days`).
+1.  **Staging and Enrichment (`stg_transactions`, `int_transactions_enriched`)**: The process begins by taking the raw transaction data and cleaning it. We standardize data types, handle missing values, and add key flags (e.g., `is_revenue`, `is_debit`) and date markers (e.g., `most_recent_statement_date_minus_90d`).
 
 2.  **Daily Time Series (`fct_daily_transactions_by_customer`)**: To enable accurate calculations of daily and weekly averages, we create a complete time series for each customer, ensuring there is one row for every single day. This model is critical for calculating metrics like `revised_average_balance` and `weekly_revenue`.
 
 3.  **Final Feature Aggregation (`fct_credit_metrics_by_customer`)**: This is the final and most important dbt model. It aggregates all the daily data into a single row per customer, calculating all the foundational metrics seen in the Google Sheet. This includes:
     *   `revenue_total`
-    *   `revenue_recent_90_days`
+    *   `revenue_recent_90d`
     *   `average_daily_balance_across_bank_accounts`
     *   `most_recent_balance_across_bank_accounts`
     *   `smart_revenue`

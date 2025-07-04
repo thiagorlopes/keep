@@ -8,9 +8,9 @@ WITH daily_aggregates AS (
         date,
         -- Use the date calculation columns from the source table
         most_recent_statement_date,
-        most_recent_statement_date_minus_90_days,
-        most_recent_statement_date_minus_180_days,
-        most_recent_statement_date_minus_365_days,
+        most_recent_statement_date_minus_90d,
+        most_recent_statement_date_minus_180d,
+        most_recent_statement_date_minus_365d,
         SUM(IF(is_revenue, deposits, 0)) as daily_revenue,
         SUM(IF(is_debit, withdrawals, 0)) as daily_debits
     FROM {{ ref('int_transactions_enriched') }}
@@ -23,7 +23,7 @@ WITH daily_aggregates AS (
         email,
         ROUND(AVG(revised_average_balance), 2) AS average_daily_balance_180d
     FROM {{ ref('fct_daily_transactions_by_customer') }}
-    WHERE date > most_recent_statement_date_minus_180_days
+    WHERE date > most_recent_statement_date_minus_180d
     GROUP BY ALL
 )
 
@@ -78,18 +78,18 @@ SELECT
     -- Revenue Metrics
     SUM(daily_revenue) AS revenue_total_credit,
     SUM(daily_revenue) AS revenue_total,
-    SUM(IF(date >= most_recent_statement_date_minus_90_days, daily_revenue, 0)) AS revenue_recent_90_days,
-    SUM(IF(date >= most_recent_statement_date_minus_180_days AND date < most_recent_statement_date_minus_90_days, daily_revenue, 0)) AS revenue_91_to_180_days,
+    SUM(IF(date >= most_recent_statement_date_minus_90d, daily_revenue, 0)) AS revenue_recent_90d,
+    SUM(IF(date >= most_recent_statement_date_minus_180d AND date < most_recent_statement_date_minus_90d, daily_revenue, 0)) AS revenue_91_to_180d,
 
     -- Debit Metrics
     SUM(daily_debits) AS debits_total,
-    SUM(IF(date >= most_recent_statement_date_minus_90_days, daily_debits, 0)) AS debits_recent_90_days,
-    SUM(IF(date >= most_recent_statement_date_minus_180_days AND date < most_recent_statement_date_minus_90_days, daily_debits, 0)) AS debits_91_to_180_days,
+    SUM(IF(date >= most_recent_statement_date_minus_90d, daily_debits, 0)) AS debits_recent_90d,
+    SUM(IF(date >= most_recent_statement_date_minus_180d AND date < most_recent_statement_date_minus_90d, daily_debits, 0)) AS debits_91_to_180d,
 
     -- Placeholder Credit Metrics
     0 AS credit_card_payments,
-    0 AS credit_card_recent_90_days,
-    0 AS credit_card_91_to_180_days,
+    0 AS credit_card_recent_90d,
+    0 AS credit_card_91_to_180d,
 
     -- Averages and Balances
     adb.average_daily_balance_180d AS average_daily_balance_across_bank_accounts,
