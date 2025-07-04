@@ -24,6 +24,68 @@ WITH int_transactions_enriched AS (
     FROM {{ ref('int_transactions_enriched') }}
 )
 
+,transactions_180d AS (
+    SELECT *
+    FROM int_transactions_enriched
+    WHERE is_180d_period
+)
+
+,previous_balance_180d AS (
+    SELECT
+        email,
+        request_id,
+        date,
+        balance,
+        LAG(balance) OVER(PARTITION BY email, request_id ORDER BY date) AS previous_balance,
+        deposits,
+        withdrawals
+    FROM transactions_180d
+)
+
+,starting_balance_180d AS (
+    SELECT
+        email,
+        request_id,
+        date,
+        balance,
+        previous_balance,
+        CASE
+            WHEN previous_balance IS NULL THEN balance
+            ELSE NULL
+        END AS starting_balance,
+        CASE
+            WHEN previous_balance IS NULL THEN NULL
+            ELSE deposits
+        END AS deposits,
+        CASE
+            WHEN previous_balance IS NULL THEN NULL
+            ELSE withdrawals
+        END AS withdrawals
+    FROM previous_balance_180d
+)
+
+,real_balance_180d AS (
+    SELECT
+        email,
+        request_id,
+        date,
+        balance,
+        starting_balance AS starting_balance,
+        COALESCE(deposits, 0) AS deposits,
+        COALESCE(withdrawals, 0) AS withdrawals,
+        SUM(COALESCE(starting_balance, 0) + COALESCE(deposits, 0) - COALESCE(withdrawals, 0)) OVER(ORDER BY date ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS real_balance,
+        ROW_NUMBER() OVER(PARTITION BY date ORDER BY date) AS rn
+    FROM starting_balance_180d
+    ORDER BY date
+)
+
+,agg_real_balance_180d AS (
+    SELECT *
+    FROM real_balance_180d
+    WHERE starting_balance IS NULL QUALIFY ROW_NUMBER() OVER(PARTITION BY date ORDER BY rn DESC) = 1
+    ORDER BY date DESC
+)
+
 ,dim_calendar AS (
     SELECT *
     FROM {{ ref('dim_calendar') }}
@@ -34,7 +96,6 @@ WITH int_transactions_enriched AS (
         email,
         request_id,
         date,
-        
         -- Use 180 days as default for scaffolding, but this can be easily changed
         most_recent_statement_date_minus_365_days AS start_date,
         most_recent_statement_date AS end_date,
@@ -81,7 +142,6 @@ WITH int_transactions_enriched AS (
         email,
         request_id,
         date,
-        
         -- Fill forward the last known balance for days without transactions
         LAST_VALUE(average_balance IGNORE NULLS) OVER(
             PARTITION BY email, request_id
@@ -96,7 +156,7 @@ WITH int_transactions_enriched AS (
         email,
         request_id,
         date,
-        
+
         -- Sum of all deposits for the day. This is the "Day Rev" from the sheet.
         SUM(deposits) OVER(PARTITION BY email, request_id, DAYOFYEAR(date)) AS daily_revenue,
     FROM int_transactions_enriched AS trn
@@ -109,7 +169,7 @@ WITH int_transactions_enriched AS (
         email,
         request_id,
         date,
-        
+
         -- Sum of all deposits for the day. This is the "Weekly revenue" from the sheet.
         SUM(deposits) OVER(PARTITION BY email, request_id, WEEKOFYEAR(date)) AS weekly_revenue,
     FROM int_transactions_enriched
